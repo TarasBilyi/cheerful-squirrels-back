@@ -71,3 +71,61 @@ export const getCreatedArticles = async (req, res) => {
 
   res.status(200).json(articles);
 };
+
+export const addSavedArticle = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    const { articleId } = req.body;
+
+    if (!articleId) {
+      throw createHttpError(400, "Article ID not provided");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { savedArticles: articleId } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      throw createHttpError(400, "User not found");
+    }
+
+    res.status(200).json({
+      message: 'The article has been successfully added to saved items',
+      savedArticles: updatedUser.savedArticles
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeSavedArticle = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    const { articleId } = req.body;
+
+    if (!articleId) {
+      throw createHttpError(400, "Article ID not provided");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { savedArticles: articleId } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      throw createHttpError(404, "User not found");
+    }
+
+    res.status(200).json({
+      message: 'The article has been successfully removed from saved items',
+      savedArticles: updatedUser.savedArticles
+    });
+  } catch (error) {
+    next(error);
+  }
+};
