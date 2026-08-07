@@ -6,13 +6,13 @@ const articleSchema = new Schema(
     title: {
       type: String,
       required: true,
-      trim: true, // прибирає пробіли на початку та в кінці
+      trim: true,
       minlength: 1,
     },
     desc: {
       type: String,
       default: '',
-      trim: true, // прибирає пробіли на початку та в кінці
+      trim: true,
     },
     article: {
       type: String,
