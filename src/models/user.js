@@ -9,7 +9,7 @@ const userSchema = new Schema(
       minlength: 2,
       maxlength: 32,
     },
-    avatar: {
+    avatarUrl: {
       type: String,
       required: false,
       default: 'https://ac.goit.global/fullstack/react/default-avatar.jpg',
