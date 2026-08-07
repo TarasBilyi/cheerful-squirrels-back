@@ -1,9 +1,18 @@
 import { Joi, Segments } from 'celebrate';
+import { isValidObjectId } from 'mongoose';
 
-export const registerUserSchema = {
-  [Segments.BODY]: Joi.object({
-    name: Joi.string().min(2).max(32).required(),
-    email: Joi.string().email().max(64).required(),
-    password: Joi.string().min(8).max(64).required(),
+const objectIdValidator = (value, helpers) => {
+  return !isValidObjectId(value) ? helpers.message('Invalid id format') : value;
+};
+
+export const updateArticleSchema = {
+  [Segments.PARAMS]: Joi.object({
+    articleId: Joi.string().custom(objectIdValidator).required(),
   }),
+
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().min(1),
+    desc: Joi.string().allow(''),
+    img: Joi.string().uri(),
+  }).min(1),
 };
