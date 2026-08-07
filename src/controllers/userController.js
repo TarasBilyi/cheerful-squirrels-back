@@ -21,7 +21,7 @@ export const updateUserAvatar = async (req, res, next) => {
     if (!updatedUser) {
       throw createHttpError(404, 'User not found');
     }
-    
+
     res.status(200).json({
       status: 200,
       message: 'Avatar updated successfully',
@@ -29,6 +29,24 @@ export const updateUserAvatar = async (req, res, next) => {
         avatarUrl: updatedUser.avatarUrl,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id).select(
+      '_id name avatarUrl articlesAmount',
+    );
+
+    if (!user) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    res.status(200).json(user);
   } catch (error) {
     next(error);
   }
