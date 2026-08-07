@@ -13,7 +13,7 @@ export const createSession = async (userId) => {
     accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
     refreshTokenValidUntil: new Date(Date.now() + ONE_DAY),
   });
-};
+}; 
 
 export const setSessionCookies = (res, session) => {
   res.cookie('accessToken', session.accessToken, {
