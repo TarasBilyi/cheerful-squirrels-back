@@ -1,8 +1,10 @@
 import createHttpError from 'http-errors';
 import { Article } from '../models/articles.js';
+import { getArticles } from '../services/articles.js';
 
 export const updateArticle = async (req, res) => {
   const { articleId } = req.params;
+
   const updatedArticle = await Article.findOneAndUpdate(
     { _id: articleId, ownerId: req.user._id },
     req.body,
@@ -16,4 +18,20 @@ export const updateArticle = async (req, res) => {
   }
 
   res.status(200).json(updatedArticle);
+};
+
+export const getArticlesController = async (req, res) => {
+  const result = await getArticles(req.query);
+
+  res.status(200).json({
+    status: 200,
+    data: result,
+  });
+};
+
+export const getCategoriesController = async (req, res) => {
+  res.status(200).json({
+    status: 200,
+    data: ['popular', 'general', 'recommended'],
+  });
 };
