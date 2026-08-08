@@ -6,14 +6,24 @@ import {
   getArticlesController,
   getCategoriesController,
   deleteArticle,
+  createArticle,
 } from '../controllers/articlesController.js';
 import {
   updateArticleSchema,
   getArticlesSchema,
   articleIdSchema,
+  createArticleSchema,
 } from '../validations/articlesValidation.js';
+import { upload } from '../middleware/multer.js';
 
 const router = Router();
+
+router.post('/articles',
+  authenticate,
+  upload.single('photo'),
+  celebrate(createArticleSchema),
+  createArticle,
+);
 
 router.get('/articles', celebrate(getArticlesSchema), getArticlesController);
 
