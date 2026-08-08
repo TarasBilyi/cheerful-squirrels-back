@@ -15,6 +15,11 @@ export const updateArticleSchema = {
   [Segments.PARAMS]: Joi.object({
     articleId: Joi.string().custom(objectIdValidator).required(),
   }),
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().min(3).max(48),
+    article: Joi.string().min(100).max(4000),
+    img: Joi.string().uri(),
+  }),
 };
 
 export const getArticlesSchema = {
