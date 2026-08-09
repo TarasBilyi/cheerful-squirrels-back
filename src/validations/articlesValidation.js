@@ -5,6 +5,13 @@ const objectIdValidator = (value, helpers) => {
   return !isValidObjectId(value) ? helpers.message('Invalid id format') : value;
 };
 
+export const createArticleSchema = {
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().min(3).max(48).required(),
+    article: Joi.string().min(100).max(4000).required(),
+  })
+};
+
 export const articleIdSchema = {
   [Segments.PARAMS]: Joi.object({
     articleId: Joi.string().custom(objectIdValidator).required(),
