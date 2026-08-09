@@ -1,4 +1,5 @@
 import createHttpError from 'http-errors';
+import { isValidObjectId } from 'mongoose';
 import { User } from '../models/user.js';
 import { Article } from '../models/articles.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
@@ -52,6 +53,45 @@ export const getUserById = async (req, res, next) => {
   }
 };
 
+export const getCurrentUser = async (req, res) => {
+  res.status(200).json(req.user);
+};
+
+export const updateCurrentUser = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+    const update = {};
+
+    if (name !== undefined) update.name = name;
+    if (email !== undefined) update.email = email;
+
+    if (email !== undefined) {
+      const existingUser = await User.findOne({
+        email,
+        _id: { $ne: req.user._id },
+      });
+
+      if (existingUser) {
+        throw createHttpError(409, 'Email in use');
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      update,
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedUser) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getSavedArticles = async (req, res) => {
   const user = await User.findById(req.user._id).populate('savedArticles');
 
@@ -78,8 +118,12 @@ export const addSavedArticle = async (req, res, next) => {
 
     const { articleId } = req.body;
 
-    if (!articleId) {
-      throw createHttpError(400, "Article ID not provided");
+    if (!isValidObjectId(articleId)) {
+      throw createHttpError(400, 'Invalid article id');
+    }
+
+    if (!(await Article.exists({ _id: articleId }))) {
+      throw createHttpError(404, 'Article not found');
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -107,8 +151,8 @@ export const removeSavedArticle = async (req, res, next) => {
 
     const { articleId } = req.body;
 
-    if (!articleId) {
-      throw createHttpError(400, "Article ID not provided");
+    if (!isValidObjectId(articleId)) {
+      throw createHttpError(400, 'Invalid article id');
     }
 
     const updatedUser = await User.findByIdAndUpdate(

@@ -13,12 +13,12 @@ export const getArticles = async ({
   const skip = (currentPage - 1) * currentPerPage;
 
   if (category === 'recommended') {
-    const [articles, totalItems] = await Promise.all([
-      Article.aggregate([
-        { $sample: { size: currentPerPage } },
-      ]),
-      Article.countDocuments(),
-    ]);
+    const totalItems = await Article.countDocuments();
+    const sampleSize = Math.min(totalItems, skip + currentPerPage);
+    const sampledArticles = sampleSize
+      ? await Article.aggregate([{ $sample: { size: sampleSize } }])
+      : [];
+    const articles = sampledArticles.slice(skip, skip + currentPerPage);
 
     return {
       data: articles,

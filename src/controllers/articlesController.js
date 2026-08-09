@@ -1,5 +1,6 @@
 import createHttpError from 'http-errors';
 import { Article } from '../models/articles.js';
+import { User } from '../models/user.js';
 import { getArticles } from '../services/articles.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 
@@ -8,16 +9,38 @@ export const createArticle = async (req, res) => {
     return res.status(400).json({ message: 'Missing article photo' });
   }
 
-  const photoUrl = await saveFileToCloudinary(req.file);
+  const uploadResult = await saveFileToCloudinary(
+    req.file.buffer,
+    req.user._id.toString(),
+    'article',
+  );
 
   const article = await Article.create({
     ...req.body,
-    photo: photoUrl,
+    img: uploadResult.secure_url,
     date: new Date().toISOString().slice(0, 10),
-    author: req.user._id,
+    ownerId: req.user._id,
   });
 
+  await User.updateOne(
+    { _id: req.user._id },
+    { $inc: { articlesAmount: 1 } },
+  );
+
   return res.status(201).json(article);
+};
+
+export const getArticleById = async (req, res) => {
+  const article = await Article.findById(req.params.articleId).populate(
+    'ownerId',
+    '_id name avatarUrl',
+  );
+
+  if (!article) {
+    throw createHttpError(404, 'Article not found');
+  }
+
+  res.status(200).json(article);
 };
 
 export const updateArticle = async (req, res) => {
@@ -28,6 +51,7 @@ export const updateArticle = async (req, res) => {
     req.body,
     {
       returnDocument: 'after',
+      runValidators: true,
     },
   );
 
@@ -48,6 +72,11 @@ export const deleteArticle = async (req, res) => {
   if (!article) {
     throw createHttpError(404, 'Article not found');
   }
+
+  await User.updateOne(
+    { _id: req.user._id },
+    { $inc: { articlesAmount: -1 } },
+  );
 
   res.status(200).json(article);
 };

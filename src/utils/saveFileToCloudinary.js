@@ -7,10 +7,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function saveFileToCloudinary(buffer, userId) {
+export async function saveFileToCloudinary(buffer, ownerId, resource = 'avatar') {
+  const isAvatar = resource === 'avatar';
   const options = {
-    folder: 'harmoniq-app/avatars',
-    public_id: `avatar_${userId}`,
+    folder: `harmoniq-app/${isAvatar ? 'avatars' : 'articles'}`,
+    public_id: isAvatar
+      ? `avatar_${ownerId}`
+      : `article_${ownerId}_${Date.now()}`,
     resource_type: 'image',
     overwrite: true,
     unique_filename: false,

@@ -1,5 +1,5 @@
 import createHttpError from 'http-errors';
-import { Article } from '../models/article.js';
+import { Article } from '../models/articles.js';
 
 export const checkArticleOwner = async (req, res, next) => {
   const article = await Article.findById(req.params.articleId);
