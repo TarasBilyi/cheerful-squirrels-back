@@ -6,9 +6,10 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 export async function saveFileToCloudinary(buffer, userId) {
   const options = {
-    folder: 'students-app/avatars',
+    folder: 'harmoniq-app/avatars',
     public_id: `avatar_${userId}`,
     resource_type: 'image',
     overwrite: true,
@@ -33,4 +34,3 @@ export async function saveFileToCloudinary(buffer, userId) {
     uploadStream.end(buffer);
   });
 }
-

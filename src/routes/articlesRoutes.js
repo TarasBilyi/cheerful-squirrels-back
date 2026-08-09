@@ -18,7 +18,8 @@ import { upload } from '../middleware/multer.js';
 
 const router = Router();
 
-router.post('/articles',
+router.post(
+  '/articles',
   authenticate,
   upload.single('photo'),
   celebrate(createArticleSchema),
