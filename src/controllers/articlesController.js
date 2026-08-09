@@ -1,21 +1,21 @@
 import createHttpError from 'http-errors';
 import { Article } from '../models/articles.js';
 import { getArticles } from '../services/articles.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 
 export const createArticle = async (req, res) => {
-
   if (!req.file) {
     return res.status(400).json({ message: 'Missing article photo' });
   }
 
   const photoUrl = await saveFileToCloudinary(req.file);
 
-  const note = await Article.create({
+  const article = await Article.create({
     ...req.body,
     photo: photoUrl,
     date: new Date().toISOString().slice(0, 10),
     author: req.user._id,
-  })
+  });
 
   return res.status(201).json(article);
 };
