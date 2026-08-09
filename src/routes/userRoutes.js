@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
-import { updateUserAvatar, getUserById, addSavedArticle, removeSavedArticle } from '../controllers/userController.js';
+import { updateUserAvatar, getUserById, addSavedArticle, removeSavedArticle, updateUser } from '../controllers/userController.js';
 import {
   getSavedArticles,
   getCreatedArticles,
 } from '../controllers/userController.js';
 import { upload } from '../middleware/multer.js';
+import { celebrate } from 'celebrate';
+import { updateUserSchema } from '../validations/authValidation.js';
 
 const router = Router();
 
@@ -22,5 +24,7 @@ router.patch(
   upload.single('avatar'),
   updateUserAvatar,
 );
+
+router.patch('/users/me', authenticate, celebrate(updateUserSchema), updateUser);
 
 export default router;

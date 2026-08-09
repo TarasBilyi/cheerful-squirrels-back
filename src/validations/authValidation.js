@@ -14,3 +14,10 @@ export const loginUserSchema = {
     password: Joi.string().min(8).max(64).required(),
   }),
 };
+
+export const updateUserSchema = {
+  [Segments.BODY]: Joi.object({
+    email: Joi.string().email().max(64),
+    name: Joi.string().min(2).max(32),
+  }).min(1)
+};
