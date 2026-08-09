@@ -37,10 +37,7 @@ export const getArticles = async ({
       : { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
   const [articles, totalItems] = await Promise.all([
-    Article.find()
-      .sort(sort)
-      .skip(skip)
-      .limit(currentPerPage),
+    Article.find().sort(sort).skip(skip).limit(currentPerPage),
     Article.countDocuments(),
   ]);
 

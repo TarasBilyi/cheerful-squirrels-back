@@ -7,8 +7,8 @@ import {
   getArticlesController,
   getCategoriesController,
   deleteArticle,
-  createArticle,
   getArticleById,
+  createArticle,
 } from '../controllers/articlesController.js';
 import {
   updateArticleSchema,
@@ -20,6 +20,10 @@ import { upload } from '../middleware/multer.js';
 
 const router = Router();
 
+router.get('/articles', celebrate(getArticlesSchema), getArticlesController);
+
+router.get('/articles/:articleId', celebrate(articleIdSchema), getArticleById);
+
 router.post(
   '/articles',
   authenticate,
@@ -27,10 +31,6 @@ router.post(
   celebrate(createArticleSchema),
   createArticle,
 );
-
-router.get('/articles', celebrate(getArticlesSchema), getArticlesController);
-
-router.get('/articles/:articleId', celebrate(articleIdSchema), getArticleById);
 
 router.get('/categories', getCategoriesController);
 

@@ -22,10 +22,7 @@ export const createArticle = async (req, res) => {
     ownerId: req.user._id,
   });
 
-  await User.updateOne(
-    { _id: req.user._id },
-    { $inc: { articlesAmount: 1 } },
-  );
+  await User.updateOne({ _id: req.user._id }, { $inc: { articlesAmount: 1 } });
 
   return res.status(201).json(article);
 };
@@ -73,10 +70,7 @@ export const deleteArticle = async (req, res) => {
     throw createHttpError(404, 'Article not found');
   }
 
-  await User.updateOne(
-    { _id: req.user._id },
-    { $inc: { articlesAmount: -1 } },
-  );
+  await User.updateOne({ _id: req.user._id }, { $inc: { articlesAmount: -1 } });
 
   res.status(200).json(article);
 };
