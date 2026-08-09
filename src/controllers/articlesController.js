@@ -20,18 +20,14 @@ export const createArticle = async (req, res) => {
   return res.status(201).json(article);
 };
 
-
-export const getArticles = async (req, res) => {
+export const getArticle = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const perPage = Number(req.query.perPage) || 10;
 
   const skip = (page - 1) * perPage;
 
   const [articles, totalItems] = await Promise.all([
-    Article.find()
-      .skip(skip)
-      .limit(perPage)
-      .sort({ createdAt: -1 }),
+    Article.find().skip(skip).limit(perPage).sort({ createdAt: -1 }),
 
     Article.countDocuments(),
   ]);
@@ -53,7 +49,6 @@ export const getArticles = async (req, res) => {
   });
 };
 
-
 export const getArticleById = async (req, res) => {
   const { articleId } = req.params;
 
@@ -71,7 +66,6 @@ export const getArticleById = async (req, res) => {
     },
   });
 };
-
 
 export const updateArticle = async (req, res) => {
   const { articleId } = req.params;
