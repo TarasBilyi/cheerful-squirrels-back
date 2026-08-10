@@ -132,13 +132,21 @@ export const removeSavedArticle = async (req, res, next) => {
 
 export const updateUser = async (req, res) => {
   const userId = req.user._id;
+  
+  const { name, email, avatar, ...rest } = req.body;
+  
   const updatedUser = await User.findOneAndUpdate(
-     userId,
-      req.body,
-      { returnDocument: 'after' },
-    );
+    { _id: userId },          
+    { name, email, avatar },   
+    {
+      returnDocument: 'after',
+      runValidators: true, 
+    }
+  );
+
   if (!updatedUser) {
-    throw createHttpError(404, '❌ Note not found');
+    throw createHttpError(404, 'User not found');
   }
+  
   res.status(200).json(updatedUser);
 };
