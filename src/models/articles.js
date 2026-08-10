@@ -7,7 +7,7 @@ const articleSchema = new Schema(
       type: String,
       required: true,
       trim: true,
-      minlength: 1,
+      minlength: 3,
     },
     desc: {
       type: String,
@@ -17,6 +17,8 @@ const articleSchema = new Schema(
     article: {
       type: String,
       required: true,
+      minlength: 100,
+      maxlength: 4000,
     },
     rate: { type: Number, default: 0, min: 0 },
     ownerId: {

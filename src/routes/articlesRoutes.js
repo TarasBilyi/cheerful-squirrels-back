@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { celebrate } from 'celebrate';
 import { authenticate } from '../middleware/authenticate.js';
+import { checkArticleOwner } from '../middleware/checkArticleOwner.js';
 import {
   updateArticle,
   getArticlesController,
@@ -16,6 +17,7 @@ import {
   createArticleSchema,
 } from '../validations/articlesValidation.js';
 import { upload } from '../middleware/multer.js';
+import { compressImage } from '../middleware/compressImage.js';
 
 const router = Router();
 
@@ -27,6 +29,7 @@ router.post(
   '/articles',
   authenticate,
   upload.single('photo'),
+  compressImage,
   celebrate(createArticleSchema),
   createArticle,
 );
@@ -37,6 +40,7 @@ router.patch(
   '/articles/:articleId',
   authenticate,
   celebrate(updateArticleSchema),
+  checkArticleOwner,
   updateArticle,
 );
 
@@ -44,6 +48,7 @@ router.delete(
   '/articles/:articleId',
   authenticate,
   celebrate(articleIdSchema),
+  checkArticleOwner,
   deleteArticle,
 );
 

@@ -13,19 +13,23 @@ export const getArticles = async ({
   const skip = (currentPage - 1) * currentPerPage;
 
   if (category === 'recommended') {
-    const [articles, totalItems] = await Promise.all([
-      Article.aggregate([{ $sample: { size: currentPerPage } }]),
-      Article.countDocuments(),
-    ]);
+    const totalItems = await Article.countDocuments();
+    const sampleSize = Math.min(totalItems, skip + currentPerPage);
+    const sampledArticles = sampleSize
+      ? await Article.aggregate([{ $sample: { size: sampleSize } }])
+      : [];
+    const articles = sampledArticles.slice(skip, skip + currentPerPage);
 
     return {
-      data: articles,
-      page: currentPage,
-      perPage: currentPerPage,
-      totalItems,
-      totalPages: Math.ceil(totalItems / currentPerPage),
-      hasPreviousPage: currentPage > 1,
-      hasNextPage: currentPage * currentPerPage < totalItems,
+      articles,
+      pagination: {
+        page: currentPage,
+        perPage: currentPerPage,
+        totalItems,
+        totalPages: Math.ceil(totalItems / currentPerPage),
+        hasPreviousPage: currentPage > 1,
+        hasNextPage: currentPage * currentPerPage < totalItems,
+      },
     };
   }
 
@@ -40,38 +44,14 @@ export const getArticles = async ({
   ]);
 
   return {
-    data: articles,
-    page: currentPage,
-    perPage: currentPerPage,
-    totalItems,
-    totalPages: Math.ceil(totalItems / currentPerPage),
-    hasPreviousPage: currentPage > 1,
-    hasNextPage: currentPage * currentPerPage < totalItems,
-  };
-};
-
-export const getAllArticles = async ({ page = 1, perPage = 10 }) => {
-  const skip = (page - 1) * perPage;
-
-  const [articles, totalItems] = await Promise.all([
-    Article.find().skip(skip).limit(perPage).sort({ createdAt: -1 }),
-
-    Article.countDocuments(),
-  ]);
-
-  const totalPages = Math.ceil(totalItems / perPage);
-
-  return {
     articles,
     pagination: {
-      page,
-      perPage,
+      page: currentPage,
+      perPage: currentPerPage,
       totalItems,
-      totalPages,
+      totalPages: Math.ceil(totalItems / currentPerPage),
+      hasPreviousPage: currentPage > 1,
+      hasNextPage: currentPage * currentPerPage < totalItems,
     },
   };
-};
-
-export const getArticleById = async (articleId) => {
-  return Article.findById(articleId);
 };
