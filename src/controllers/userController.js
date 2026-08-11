@@ -1,3 +1,5 @@
+// src/controllers/userController.js
+
 import createHttpError from 'http-errors';
 import { isValidObjectId } from 'mongoose';
 import { User } from '../models/user.js';

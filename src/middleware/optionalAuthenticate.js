@@ -1,3 +1,5 @@
+// src/middleware/optionalAuthenticate.js
+
 import { Session } from '../models/session.js';
 import { User } from '../models/user.js';
 

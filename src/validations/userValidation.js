@@ -1,3 +1,5 @@
+// src/validations/userValidation.js
+
 import { Joi, Segments } from 'celebrate';
 
 export const userIdSchema = {
