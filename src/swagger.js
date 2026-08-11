@@ -9,7 +9,7 @@ const doc = {
   host: 'https://cheerful-squirrels-back.onrender.com',
 };
 
-const outputFile = './swagger.json';
+const outputFile = './swagger-autogen.json';
 const routes = [
   './routes/articlesRoutes.js',
   './routes/authRoutes.js',
