@@ -18,6 +18,12 @@ export const articleIdSchema = {
   }),
 };
 
+export const savedArticleSchema = {
+  [Segments.BODY]: Joi.object({
+    articleId: Joi.string().custom(objectIdValidator).required(),
+  }),
+};
+
 export const updateArticleSchema = {
   [Segments.PARAMS]: Joi.object({
     articleId: Joi.string().custom(objectIdValidator).required(),
@@ -26,7 +32,7 @@ export const updateArticleSchema = {
     title: Joi.string().min(3).max(48),
     article: Joi.string().min(100).max(4000),
     img: Joi.string().uri(),
-  }),
+  }).min(1),
 };
 
 export const getArticlesSchema = {

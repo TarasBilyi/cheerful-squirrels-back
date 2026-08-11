@@ -1,7 +1,9 @@
 import createHttpError from 'http-errors';
+import { isValidObjectId } from 'mongoose';
 import { User } from '../models/user.js';
 import { Article } from '../models/articles.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const updateUserAvatar = async (req, res, next) => {
   try {
@@ -22,16 +24,18 @@ export const updateUserAvatar = async (req, res, next) => {
       throw createHttpError(404, 'User not found');
     }
 
-    res.status(200).json({
-      status: 200,
-      message: 'Avatar updated successfully',
-      data: {
-        avatarUrl: updatedUser.avatarUrl,
-      },
+    return sendSuccess(res, 200, 'Avatar updated successfully', {
+      avatarUrl: updatedUser.avatarUrl,
     });
   } catch (error) {
     next(error);
   }
+};
+
+export const getCurrentUser = async (req, res) => {
+  return sendSuccess(res, 200, 'User retrieved successfully', {
+    user: req.user,
+  });
 };
 
 export const getUserById = async (req, res, next) => {
@@ -46,7 +50,7 @@ export const getUserById = async (req, res, next) => {
       throw createHttpError(404, 'User not found');
     }
 
-    res.status(200).json(user);
+    return sendSuccess(res, 200, 'User retrieved successfully', { user });
   } catch (error) {
     next(error);
   }
@@ -59,17 +63,25 @@ export const getSavedArticles = async (req, res) => {
     throw createHttpError(404, 'User not found');
   }
 
-  res.status(200).json(user.savedArticles);
+  return sendSuccess(res, 200, 'Saved articles retrieved successfully', {
+    articles: user.savedArticles,
+  });
 };
 
 export const getCreatedArticles = async (req, res) => {
   const { userId } = req.params;
 
+  if (!isValidObjectId(userId)) {
+    throw createHttpError(400, 'Invalid user id');
+  }
+
   const articles = await Article.find({
     ownerId: userId,
   });
 
-  res.status(200).json(articles);
+  return sendSuccess(res, 200, 'User articles retrieved successfully', {
+    articles,
+  });
 };
 
 export const addSavedArticle = async (req, res, next) => {
@@ -78,23 +90,26 @@ export const addSavedArticle = async (req, res, next) => {
 
     const { articleId } = req.body;
 
-    if (!articleId) {
-      throw createHttpError(400, "Article ID not provided");
+    if (!isValidObjectId(articleId)) {
+      throw createHttpError(400, 'Invalid article id');
+    }
+
+    if (!(await Article.exists({ _id: articleId }))) {
+      throw createHttpError(404, 'Article not found');
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $addToSet: { savedArticles: articleId } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
-      throw createHttpError(400, "User not found");
+      throw createHttpError(400, 'User not found');
     }
 
-    res.status(200).json({
-      message: 'The article has been successfully added to saved items',
-      savedArticles: updatedUser.savedArticles
+    return sendSuccess(res, 200, 'Article added to saved items', {
+      savedArticles: updatedUser.savedArticles,
     });
   } catch (error) {
     next(error);
@@ -107,23 +122,22 @@ export const removeSavedArticle = async (req, res, next) => {
 
     const { articleId } = req.body;
 
-    if (!articleId) {
-      throw createHttpError(400, "Article ID not provided");
+    if (!isValidObjectId(articleId)) {
+      throw createHttpError(400, 'Invalid article id');
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $pull: { savedArticles: articleId } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
-      throw createHttpError(404, "User not found");
+      throw createHttpError(404, 'User not found');
     }
 
-    res.status(200).json({
-      message: 'The article has been successfully removed from saved items',
-      savedArticles: updatedUser.savedArticles
+    return sendSuccess(res, 200, 'Article removed from saved items', {
+      savedArticles: updatedUser.savedArticles,
     });
   } catch (error) {
     next(error);
@@ -132,21 +146,33 @@ export const removeSavedArticle = async (req, res, next) => {
 
 export const updateUser = async (req, res) => {
   const userId = req.user._id;
-  
-  const { name, email, avatar, ...rest } = req.body;
-  
-  const updatedUser = await User.findOneAndUpdate(
-    { _id: userId },          
-    { name, email, avatar },   
-    {
-      returnDocument: 'after',
-      runValidators: true, 
+  const { name, email, avatar } = req.body;
+  const update = {};
+
+  if (name !== undefined) update.name = name;
+  if (email !== undefined) update.email = email;
+  if (avatar !== undefined) update.avatarUrl = avatar;
+
+  if (email !== undefined) {
+    const existingUser = await User.findOne({
+      email,
+      _id: { $ne: userId },
+    });
+
+    if (existingUser) {
+      throw createHttpError(409, 'Email in use');
     }
-  );
+  }
+
+  const updatedUser = await User.findOneAndUpdate({ _id: userId }, update, {
+    returnDocument: 'after',
+    runValidators: true,
+  });
 
   if (!updatedUser) {
     throw createHttpError(404, 'User not found');
   }
-  
-  res.status(200).json(updatedUser);
+  return sendSuccess(res, 200, 'User updated successfully', {
+    user: updatedUser,
+  });
 };

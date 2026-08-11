@@ -24,7 +24,6 @@ app.use(authRoutes);
 app.use(userRouter);
 app.use(articlesRoutes);
 
-
 app.use(notFoundHandler);
 app.use(errors());
 app.use(errorHandler);

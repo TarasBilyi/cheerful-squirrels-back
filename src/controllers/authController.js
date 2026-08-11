@@ -3,6 +3,7 @@ import { createSession, setSessionCookies } from '../services/auth.js';
 import { User } from '../models/user.js';
 import bcrypt from 'bcrypt';
 import { Session } from '../models/session.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -24,7 +25,9 @@ export const registerUser = async (req, res) => {
 
   setSessionCookies(res, newSession);
 
-  res.status(201).json(newUser);
+  return sendSuccess(res, 201, 'User registered successfully', {
+    user: newUser,
+  });
 };
 
 export const logoutUser = async (req, res) => {
@@ -60,7 +63,7 @@ export const loginUser = async (req, res) => {
   const newSession = await createSession(user._id);
   setSessionCookies(res, newSession);
 
-  res.status(200).json(user);
+  return sendSuccess(res, 200, 'Login successful', { user });
 };
 
 export const refreshUserSession = async (req, res) => {
@@ -93,7 +96,5 @@ export const refreshUserSession = async (req, res) => {
   const newSession = await createSession(session.userId);
   setSessionCookies(res, newSession);
 
-  res.status(200).json({
-    message: "Session refreshed",
-  });
+  return sendSuccess(res, 200, 'Session refreshed');
 };
