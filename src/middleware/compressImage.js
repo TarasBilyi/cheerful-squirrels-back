@@ -1,3 +1,5 @@
+// src/middleware/compressImage.js
+
 import sharp from 'sharp';
 import createHttpError from 'http-errors';
 

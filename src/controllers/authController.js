@@ -1,3 +1,5 @@
+// src/controllers/authController.js
+
 import createHttpError from 'http-errors';
 import { createSession, setSessionCookies } from '../services/auth.js';
 import { User } from '../models/user.js';
@@ -47,15 +49,15 @@ export const logoutUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    throw createHttpError(401, "Invalid credentials");
-  };
+    throw createHttpError(401, 'Invalid credentials');
+  }
 
   const isValidPassword = await bcrypt.compare(
     req.body.password,
     user.password,
   );
   if (!isValidPassword) {
-    throw createHttpError(401, "Invalid credentials");
+    throw createHttpError(401, 'Invalid credentials');
   }
 
   await Session.deleteOne({ userId: user._id });
@@ -70,7 +72,7 @@ export const refreshUserSession = async (req, res) => {
   const { sessionId, refreshToken } = req.cookies;
 
   if (!sessionId || !refreshToken) {
-    throw createHttpError(401, "Missing tokens");
+    throw createHttpError(401, 'Missing tokens');
   }
 
   const session = await Session.findOne({
@@ -79,16 +81,16 @@ export const refreshUserSession = async (req, res) => {
   });
 
   if (!session) {
-    throw createHttpError(401, "Session not found");
+    throw createHttpError(401, 'Session not found');
   }
 
   const isRefreshTokenExpired = session.refreshTokenValidUntil < new Date();
   if (isRefreshTokenExpired) {
     await session.deleteOne();
-    res.clearCookie("sessionId");
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    throw createHttpError(401, "Session token expired");
+    res.clearCookie('sessionId');
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    throw createHttpError(401, 'Session token expired');
   }
 
   await session.deleteOne();

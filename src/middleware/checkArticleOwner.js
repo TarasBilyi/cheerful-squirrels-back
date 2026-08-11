@@ -1,3 +1,5 @@
+// src/middleware/checkArticleOwner.js
+
 import createHttpError from 'http-errors';
 import { Article } from '../models/articles.js';
 
