@@ -43,7 +43,7 @@ npm run start            # звичайний запуск
 | `PORT` | Порт, на якому запускається сервер (наприклад `3000`) |
 | `NODE_ENV` | `development` / `production` |
 | `MONGO_URL` | Рядок підключення до MongoDB (локальної або Atlas) |
-| `JWT_SECRET` | Секретний рядок (наразі не задіяний у логіці перевірки токенів, але потрібен для запуску) |
+| `JWT_SECRET` | Секретний рядок |
 | `FRONTEND_DOMAIN` | Домен фронтенду — має використовуватись у CORS-налаштуваннях |
 | `CLOUDINARY_CLOUD_NAME` | Ім'я хмари Cloudinary |
 | `CLOUDINARY_API_KEY` | API-ключ Cloudinary |
