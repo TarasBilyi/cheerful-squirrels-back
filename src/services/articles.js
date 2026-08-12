@@ -1,5 +1,3 @@
-// src/services/articles.js
-
 import { Article } from '../models/articles.js';
 
 export const getArticles = async ({

@@ -1,5 +1,3 @@
-// src/middleware/multer.js
-
 import multer from 'multer';
 import createHttpError from 'http-errors';
 

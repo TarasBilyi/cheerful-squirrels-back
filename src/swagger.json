@@ -122,6 +122,36 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Articles retrieved successfully",
+                      "data": {
+                        "articles": [
+                          {
+                            "_id": "6512f1a2b3c4d5e6f7890abc",
+                            "img": "https://res.cloudinary.com/abc/article.jpg",
+                            "title": "Finding calm in a busy world",
+                            "desc": "",
+                            "article": "Full article body text...",
+                            "rate": 0,
+                            "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                            "date": "2026-08-11",
+                            "createdAt": "2026-08-11T21:28:08.447Z",
+                            "updatedAt": "2026-08-11T21:28:08.447Z"
+                          }
+                        ],
+                        "pagination": {
+                          "page": 1,
+                          "perPage": 10,
+                          "totalItems": 1,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -194,6 +224,28 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 201,
+                      "message": "Article created successfully",
+                      "data": {
+                        "article": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "img": "https://res.cloudinary.com/abc/article.jpg",
+                          "title": "Finding calm in a busy world",
+                          "desc": "",
+                          "article": "Full article body text...",
+                          "rate": 0,
+                          "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                          "date": "2026-08-11",
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -245,9 +297,39 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Article retrieved successfully",
+                      "data": {
+                        "article": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "img": "https://res.cloudinary.com/abc/article.jpg",
+                          "title": "Finding calm in a busy world",
+                          "desc": "",
+                          "article": "Full article body text...",
+                          "rate": 0,
+                          "ownerId": {
+                            "_id": "6512f1a2b3c4d5e6f7890abc",
+                            "name": "Jane Doe",
+                            "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                            "articlesAmount": 3
+                          },
+                          "date": "2026-08-11",
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -324,6 +406,28 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Article updated successfully",
+                      "data": {
+                        "article": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "img": "https://res.cloudinary.com/abc/article.jpg",
+                          "title": "Finding calm in a busy world",
+                          "desc": "",
+                          "article": "Full article body text...",
+                          "rate": 0,
+                          "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                          "date": "2026-08-11",
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -385,9 +489,34 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Article deleted successfully",
+                      "data": {
+                        "article": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "img": "https://res.cloudinary.com/abc/article.jpg",
+                          "title": "Finding calm in a busy world",
+                          "desc": "",
+                          "article": "Full article body text...",
+                          "rate": 0,
+                          "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                          "date": "2026-08-11",
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -428,6 +557,15 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Categories retrieved successfully",
+                      "data": ["popular", "general", "recommended"]
+                    }
+                  }
                 }
               }
             }
@@ -495,19 +633,32 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 201,
+                      "message": "User registered successfully",
+                      "data": {
+                        "user": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "name": "Jane Doe",
+                          "email": "jane@example.com",
+                          "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                          "articlesAmount": 3,
+                          "savedArticles": [],
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Validation error or email already in use",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "$ref": "#/components/responses/BadRequest"
           }
         }
       }
@@ -519,7 +670,8 @@
         "description": "Deletes the current session and clears auth cookies.",
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "No Content",
+            "content": {}
           }
         }
       }
@@ -578,9 +730,32 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Login successful",
+                      "data": {
+                        "user": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "name": "Jane Doe",
+                          "email": "jane@example.com",
+                          "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                          "articlesAmount": 3,
+                          "savedArticles": [],
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "description": "Invalid credentials",
@@ -588,6 +763,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "InvalidCredentials": {
+                    "value": {
+                      "status": 401,
+                      "message": "Invalid credentials",
+                      "data": null
+                    }
+                  }
                 }
               }
             }
@@ -607,6 +791,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Session refreshed",
+                      "data": null
+                    }
+                  }
                 }
               }
             }
@@ -617,6 +810,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "RefreshUnauthorized": {
+                    "value": {
+                      "status": 401,
+                      "message": "Missing tokens",
+                      "data": null
+                    }
+                  }
                 }
               }
             }
@@ -660,6 +862,30 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Saved articles retrieved successfully",
+                      "data": {
+                        "articles": [
+                          {
+                            "_id": "6512f1a2b3c4d5e6f7890abc",
+                            "img": "https://res.cloudinary.com/abc/article.jpg",
+                            "title": "Finding calm in a busy world",
+                            "desc": "",
+                            "article": "Full article body text...",
+                            "rate": 0,
+                            "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                            "date": "2026-08-11",
+                            "createdAt": "2026-08-11T21:28:08.447Z",
+                            "updatedAt": "2026-08-11T21:28:08.447Z"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -706,6 +932,26 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "User retrieved successfully",
+                      "data": {
+                        "user": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "name": "Jane Doe",
+                          "email": "jane@example.com",
+                          "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                          "articlesAmount": 3,
+                          "savedArticles": [],
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -777,9 +1023,32 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "User updated successfully",
+                      "data": {
+                        "user": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "name": "Jane Doe",
+                          "email": "jane@example.com",
+                          "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                          "articlesAmount": 3,
+                          "savedArticles": [],
+                          "createdAt": "2026-08-11T21:28:08.447Z",
+                          "updatedAt": "2026-08-11T21:28:08.447Z"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -793,6 +1062,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 409,
+                      "message": "Email in use",
+                      "data": null
+                    }
+                  }
                 }
               }
             }
@@ -841,6 +1119,30 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "User articles retrieved successfully",
+                      "data": {
+                        "articles": [
+                          {
+                            "_id": "6512f1a2b3c4d5e6f7890abc",
+                            "img": "https://res.cloudinary.com/abc/article.jpg",
+                            "title": "Finding calm in a busy world",
+                            "desc": "",
+                            "article": "Full article body text...",
+                            "rate": 0,
+                            "ownerId": "6512f1a2b3c4d5e6f7890abc",
+                            "date": "2026-08-11",
+                            "createdAt": "2026-08-11T21:28:08.447Z",
+                            "updatedAt": "2026-08-11T21:28:08.447Z"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -889,9 +1191,28 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "User retrieved successfully",
+                      "data": {
+                        "user": {
+                          "_id": "6512f1a2b3c4d5e6f7890abc",
+                          "name": "Jane Doe",
+                          "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                          "articlesAmount": 3
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -952,6 +1273,17 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Article added to saved items",
+                      "data": {
+                        "savedArticles": ["6512f1a2b3c4d5e6f7890abc"]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1019,6 +1351,17 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Article removed from saved items",
+                      "data": {
+                        "savedArticles": ["6512f1a2b3c4d5e6f7890abc"]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1088,6 +1431,17 @@
                       }
                     }
                   ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "status": 200,
+                      "message": "Avatar updated successfully",
+                      "data": {
+                        "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1304,7 +1658,7 @@
     },
     "responses": {
       "BadRequest": {
-        "description": "Invalid request parameters or body",
+        "description": "Invalid request parameters or body. Returned either for a specific application-level error, or for a failed request validation (in which case `message` is the underlying Joi validation message, e.g. \"\\\"title\\\" length must be at least 3 characters long\"). Possible application-level messages include: Missing article photo; Invalid user id; Invalid article id; Invalid id format; No file provided; Image is too complex to compress below 1 MB; Email in use; Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.; File is too large. Maximum upload size is 10 MB.",
         "content": {
           "application/json": {
             "schema": {
@@ -1314,7 +1668,7 @@
         }
       },
       "Unauthorized": {
-        "description": "Missing or invalid authentication",
+        "description": "Missing or invalid authentication. Possible messages include: Missing access token; Session not found; Access token expired; Missing tokens; Session token expired; Invalid credentials; Unauthorized.",
         "content": {
           "application/json": {
             "schema": {
@@ -1324,7 +1678,7 @@
         }
       },
       "Forbidden": {
-        "description": "Authenticated user is not allowed to perform this action",
+        "description": "Authenticated user is not allowed to perform this action. Possible message: Forbidden.",
         "content": {
           "application/json": {
             "schema": {
@@ -1334,7 +1688,7 @@
         }
       },
       "NotFound": {
-        "description": "Resource not found",
+        "description": "Resource not found. Possible messages include: Article not found; User not found; Route not found.",
         "content": {
           "application/json": {
             "schema": {

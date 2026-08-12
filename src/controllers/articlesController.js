@@ -1,5 +1,3 @@
-// src/controllers/articlesController.js
-
 import createHttpError from 'http-errors';
 import { Article } from '../models/articles.js';
 import { User } from '../models/user.js';
