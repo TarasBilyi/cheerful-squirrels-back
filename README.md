@@ -53,16 +53,16 @@ npm run start            # звичайний запуск
 
 ```
 src/
-├── constants/       # константи (наприклад, тривалість токенів)
+├── constants/        # константи (наприклад, тривалість токенів)
 ├── controllers/      # обробники запитів
 ├── db/               # підключення до MongoDB
-├── middleware/        # authenticate, checkArticleOwner, compressImage, logger, errorHandler...
-├── models/            # Mongoose-схеми: User, Article, Session
-├── routes/            # маршрути: auth, users, articles
-├── services/          # бізнес-логіка (сесії, вибірка статей)
-├── utils/              # допоміжні функції (відповіді, завантаження в Cloudinary)
-├── validations/        # Joi-схеми валідації
-├── server.js           # точка входу
+├── middleware/       # authenticate, checkArticleOwner, compressImage, logger, errorHandler...
+├── models/           # Mongoose-схеми: User, Article, Session
+├── routes/           # маршрути: auth, users, articles
+├── services/         # бізнес-логіка (сесії, вибірка статей)
+├── utils/            # допоміжні функції (відповіді, завантаження в Cloudinary)
+├── validations/      # Joi-схеми валідації
+├── server.js         # точка входу
 ├── swagger.js / swagger.json  # автогенерація/зберігання Swagger-документації
 ```
 
