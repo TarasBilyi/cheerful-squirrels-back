@@ -1,0 +1,2003 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Cheerful Squirrels API",
+    "description": "REST API for the Cheerful Squirrels application (auth, users, articles).\n\n### Response envelope\nEvery **successful** response (except `204 No Content`) has this shape:\n```json\n{ \"status\": 200, \"message\": \"Human readable message\", \"data\": { } }\n```\n\nEvery **generic error** (thrown as an `http-errors` instance, or the multer\nfile-size limit) is handled by `errorHandler` and has this shape:\n```json\n{ \"status\": 400, \"message\": \"Human readable message\", \"data\": null }\n```\n\nEvery **request-validation error** (thrown by `celebrate`/Joi for body,\nparams, or query) is handled by `celebrate`'s `errors()` middleware and has\na **different** shape:\n```json\n{\n  \"statusCode\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Validation failed\",\n  \"validation\": {\n    \"body\": {\n      \"source\": \"body\",\n      \"keys\": [\"email\"],\n      \"message\": \"\\\"email\\\" must be a valid email\"\n    }\n  }\n}\n```\n\nAny request that does not match any route falls through to\n`notFoundHandler` and returns:\n```json\n{ \"status\": 404, \"message\": \"Route not found\", \"data\": null }\n```\n\n### Authentication\nAuth is session-based via three `httpOnly` cookies set by\n`/auth/register`, `/auth/login`, and `/auth/refresh`:\n`sessionId`, `accessToken`, `refreshToken`. Protected routes require a\nvalid `sessionId` + `accessToken` pair (checked against the `Session`\ncollection). Access tokens live 15 minutes; refresh tokens live 24 hours —\ncall `/auth/refresh` to rotate them.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://cheerful-squirrels-back.onrender.com",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development (default PORT=3000, see .env)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Registration, login, logout, session refresh"
+    },
+    {
+      "name": "Users",
+      "description": "Current user profile, public user profiles, saved articles"
+    },
+    {
+      "name": "Articles",
+      "description": "Article CRUD, listing, categories"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "description": "Creates a user, opens a session, and sets `sessionId`, `accessToken`, `refreshToken` cookies.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "name": "Jane Doe",
+                "email": "jane.doe@example.com",
+                "password": "SuperSecret1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "headers": {
+              "Set-Cookie": {
+                "description": "sessionId, accessToken, refreshToken (httpOnly, secure, sameSite=none)",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 201,
+                  "message": "User registered successfully",
+                  "data": {
+                    "user": {
+                      "_id": "65f1c2a4b8e4a30012a3b456",
+                      "name": "Jane Doe",
+                      "email": "jane.doe@example.com",
+                      "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                      "articlesAmount": 0,
+                      "savedArticles": [],
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email already registered, or request body failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    }
+                  ]
+                },
+                "examples": {
+                  "emailInUse": {
+                    "summary": "Email already registered (400, business rule)",
+                    "value": {
+                      "status": 400,
+                      "message": "Email in use",
+                      "data": null
+                    }
+                  },
+                  "validationFailed": {
+                    "summary": "Body failed Joi validation (400, celebrate)",
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Validation failed",
+                      "validation": {
+                        "body": {
+                          "source": "body",
+                          "keys": ["password"],
+                          "message": "\"password\" length must be at least 8 characters long"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log in",
+        "description": "Verifies credentials, replaces any existing session for the user, and sets session cookies.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "jane.doe@example.com",
+                "password": "SuperSecret1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "headers": {
+              "Set-Cookie": {
+                "description": "sessionId, accessToken, refreshToken (httpOnly, secure, sameSite=none)",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Login successful",
+                  "data": {
+                    "user": {
+                      "_id": "65f1c2a4b8e4a30012a3b456",
+                      "name": "Jane Doe",
+                      "email": "jane.doe@example.com",
+                      "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                      "articlesAmount": 3,
+                      "savedArticles": ["65f1c2a4b8e4a30012a3b457"],
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": ["email"],
+                      "message": "\"email\" must be a valid email"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Email not found, or password does not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 401,
+                  "message": "Invalid credentials",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log out",
+        "description": "Deletes the current session and clears all session cookies.",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Logged out successfully (no content)"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missingAccessToken": {
+                    "summary": "Cookies absent",
+                    "value": {
+                      "status": 401,
+                      "message": "Missing access token",
+                      "data": null
+                    }
+                  },
+                  "invalidSession": {
+                    "summary": "sessionId cookie is not a valid ObjectId",
+                    "value": {
+                      "status": 401,
+                      "message": "Invalid session",
+                      "data": null
+                    }
+                  },
+                  "sessionNotFound": {
+                    "summary": "No matching session in the database",
+                    "value": {
+                      "status": 401,
+                      "message": "Session not found",
+                      "data": null
+                    }
+                  },
+                  "accessTokenExpired": {
+                    "summary": "Access token TTL (15 min) elapsed",
+                    "value": {
+                      "status": 401,
+                      "message": "Access token expired",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh session",
+        "description": "Reads `sessionId` and `refreshToken` cookies, rotates the session, and\nre-issues all three cookies. Does **not** use the `authenticate`\nmiddleware — it works even after the access token has expired, as\nlong as the refresh token (24h TTL) is still valid.\n",
+        "responses": {
+          "200": {
+            "description": "Session refreshed",
+            "headers": {
+              "Set-Cookie": {
+                "description": "sessionId, accessToken, refreshToken (httpOnly, secure, sameSite=none)",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Session refreshed",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid/expired refresh session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missingTokens": {
+                    "summary": "sessionId or refreshToken cookie absent",
+                    "value": {
+                      "status": 401,
+                      "message": "Missing tokens",
+                      "data": null
+                    }
+                  },
+                  "invalidSession": {
+                    "summary": "sessionId cookie is not a valid ObjectId",
+                    "value": {
+                      "status": 401,
+                      "message": "Invalid session",
+                      "data": null
+                    }
+                  },
+                  "sessionNotFound": {
+                    "summary": "No session matches sessionId + refreshToken",
+                    "value": {
+                      "status": 401,
+                      "message": "Session not found",
+                      "data": null
+                    }
+                  },
+                  "sessionTokenExpired": {
+                    "summary": "Refresh token TTL (24h) elapsed; cookies are cleared",
+                    "value": {
+                      "status": 401,
+                      "message": "Session token expired",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get the currently authenticated user",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "User retrieved successfully",
+                  "data": {
+                    "user": {
+                      "_id": "65f1c2a4b8e4a30012a3b456",
+                      "name": "Jane Doe",
+                      "email": "jane.doe@example.com",
+                      "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                      "articlesAmount": 3,
+                      "savedArticles": ["65f1c2a4b8e4a30012a3b457"],
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update current user's profile",
+        "description": "Update `name`, `email`, and/or `avatar` (URL string). At least one field is required.",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              },
+              "example": {
+                "name": "Jane D."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "User updated successfully",
+                  "data": {
+                    "user": {
+                      "_id": "65f1c2a4b8e4a30012a3b456",
+                      "name": "Jane D.",
+                      "email": "jane.doe@example.com",
+                      "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                      "articlesAmount": 3,
+                      "savedArticles": [],
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:05:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Body is empty or failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": [],
+                      "message": "\"value\" must have at least 1 key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Authenticated user no longer exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "New email is already used by another account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 409,
+                  "message": "Email in use",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me/avatar": {
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Upload/replace current user's avatar",
+        "description": "Accepts a single image file, compresses it server-side (targets <1MB), uploads it to Cloudinary, and stores the resulting URL.",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["avatar"],
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG, GIF or WebP, max 10 MB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Avatar updated successfully",
+                  "data": {
+                    "avatarUrl": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/avatars/avatar_65f1c2a4b8e4a30012a3b456.jpg"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file, disallowed file type, file too large, or file too complex to compress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "noFile": {
+                    "summary": "No file was attached",
+                    "value": {
+                      "status": 400,
+                      "message": "No file provided",
+                      "data": null
+                    }
+                  },
+                  "invalidType": {
+                    "summary": "multer fileFilter rejected the mimetype",
+                    "value": {
+                      "status": 400,
+                      "message": "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.",
+                      "data": null
+                    }
+                  },
+                  "tooLarge": {
+                    "summary": "multer LIMIT_FILE_SIZE (>10MB), handled explicitly in errorHandler",
+                    "value": {
+                      "status": 400,
+                      "message": "File is too large. Maximum upload size is 10 MB.",
+                      "data": null
+                    }
+                  },
+                  "tooComplex": {
+                    "summary": "sharp could not compress the image below 1MB in 4 attempts",
+                    "value": {
+                      "status": 400,
+                      "message": "Image is too complex to compress below 1 MB",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Authenticated user no longer exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/saved": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user's saved articles",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved articles retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Saved articles retrieved successfully",
+                  "data": {
+                    "articles": [
+                      {
+                        "_id": "65f1c2a4b8e4a30012a3b457",
+                        "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                        "title": "How squirrels prepare for winter",
+                        "desc": "",
+                        "article": "A 100+ character article body goes here...",
+                        "rate": 12,
+                        "ownerId": "65f1c2a4b8e4a30012a3b456",
+                        "date": "2026-08-13",
+                        "createdAt": "2026-08-13T10:00:00.000Z",
+                        "updatedAt": "2026-08-13T10:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Authenticated user no longer exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get a public user profile by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "24-character hex MongoDB ObjectId",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            },
+            "example": "65f1c2a4b8e4a30012a3b456"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "User retrieved successfully",
+                  "data": {
+                    "user": {
+                      "_id": "65f1c2a4b8e4a30012a3b456",
+                      "name": "Jane Doe",
+                      "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                      "articlesAmount": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`id` is not a 24-character hex string",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "params": {
+                      "source": "params",
+                      "keys": ["id"],
+                      "message": "\"id\" length must be 24 characters long"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No user with this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/articles": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all articles created by a given user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "24-character hex MongoDB ObjectId",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            },
+            "example": "65f1c2a4b8e4a30012a3b456"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User articles retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "User articles retrieved successfully",
+                  "data": {
+                    "articles": [
+                      {
+                        "_id": "65f1c2a4b8e4a30012a3b457",
+                        "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                        "title": "How squirrels prepare for winter",
+                        "desc": "",
+                        "article": "A 100+ character article body goes here...",
+                        "rate": 12,
+                        "ownerId": "65f1c2a4b8e4a30012a3b456",
+                        "date": "2026-08-13",
+                        "createdAt": "2026-08-13T10:00:00.000Z",
+                        "updatedAt": "2026-08-13T10:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`userId` is not a 24-character hex string",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "params": {
+                      "source": "params",
+                      "keys": ["userId"],
+                      "message": "\"userId\" length must be 24 characters long"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/saved": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Add an article to the current user's saved list",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedArticleRequest"
+              },
+              "example": {
+                "articleId": "65f1c2a4b8e4a30012a3b457"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Article added to saved items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Article added to saved items",
+                  "data": {
+                    "savedArticles": ["65f1c2a4b8e4a30012a3b457"]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`articleId` is missing or not a valid ObjectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": ["articleId"],
+                      "message": "Invalid id format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Article does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Article not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Remove an article from the current user's saved list",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedArticleRequest"
+              },
+              "example": {
+                "articleId": "65f1c2a4b8e4a30012a3b457"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Article removed from saved items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Article removed from saved items",
+                  "data": {
+                    "savedArticles": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`articleId` is missing or not a valid ObjectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": ["articleId"],
+                      "message": "Invalid id format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Authenticated user no longer exists (no existence check is performed on `articleId` for this operation)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "List articles (paginated, sortable, filterable by category)",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["general", "popular", "recommended"],
+              "default": "general"
+            },
+            "description": "`popular` sorts by rate desc; `recommended` returns a random sample; `general` uses sortBy/sortOrder"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "title", "rate"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Articles retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Articles retrieved successfully",
+                  "data": {
+                    "articles": [
+                      {
+                        "_id": "65f1c2a4b8e4a30012a3b457",
+                        "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                        "title": "How squirrels prepare for winter",
+                        "desc": "",
+                        "article": "A 100+ character article body goes here...",
+                        "rate": 12,
+                        "ownerId": "65f1c2a4b8e4a30012a3b456",
+                        "date": "2026-08-13",
+                        "createdAt": "2026-08-13T10:00:00.000Z",
+                        "updatedAt": "2026-08-13T10:00:00.000Z"
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "perPage": 10,
+                      "totalItems": 42,
+                      "totalPages": 5,
+                      "hasPreviousPage": false,
+                      "hasNextPage": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "query": {
+                      "source": "query",
+                      "keys": ["category"],
+                      "message": "\"category\" must be one of [general, popular, recommended]"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Articles"],
+        "summary": "Create an article",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "article", "photo"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 48
+                  },
+                  "article": {
+                    "type": "string",
+                    "minLength": 100,
+                    "maxLength": 4000
+                  },
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG, GIF or WebP, max 10 MB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Article created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 201,
+                  "message": "Article created successfully",
+                  "data": {
+                    "article": {
+                      "_id": "65f1c2a4b8e4a30012a3b457",
+                      "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                      "title": "How squirrels prepare for winter",
+                      "desc": "",
+                      "article": "A 100+ character article body goes here...",
+                      "rate": 12,
+                      "ownerId": "65f1c2a4b8e4a30012a3b456",
+                      "date": "2026-08-13",
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing photo, disallowed file type, file too large, image too complex to compress, or body failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    }
+                  ]
+                },
+                "examples": {
+                  "missingPhoto": {
+                    "summary": "No `photo` file attached",
+                    "value": {
+                      "status": 400,
+                      "message": "Missing article photo",
+                      "data": null
+                    }
+                  },
+                  "invalidType": {
+                    "summary": "multer fileFilter rejected the mimetype",
+                    "value": {
+                      "status": 400,
+                      "message": "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.",
+                      "data": null
+                    }
+                  },
+                  "tooLarge": {
+                    "summary": "multer LIMIT_FILE_SIZE (>10MB)",
+                    "value": {
+                      "status": 400,
+                      "message": "File is too large. Maximum upload size is 10 MB.",
+                      "data": null
+                    }
+                  },
+                  "tooComplex": {
+                    "summary": "sharp could not compress the image below 1MB",
+                    "value": {
+                      "status": 400,
+                      "message": "Image is too complex to compress below 1 MB",
+                      "data": null
+                    }
+                  },
+                  "validationFailed": {
+                    "summary": "title/article failed Joi validation",
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Validation failed",
+                      "validation": {
+                        "body": {
+                          "source": "body",
+                          "keys": ["article"],
+                          "message": "\"article\" length must be at least 100 characters long"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        }
+      }
+    },
+    "/articles/categories": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Get the list of available article categories",
+        "responses": {
+          "200": {
+            "description": "Categories retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Categories retrieved successfully",
+                  "data": ["popular", "general", "recommended"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/{articleId}": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Get one article by id",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ArticleId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Article retrieved successfully (owner is populated with `_id`, `name`, `avatarUrl`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Article retrieved successfully",
+                  "data": {
+                    "article": {
+                      "_id": "65f1c2a4b8e4a30012a3b457",
+                      "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                      "title": "How squirrels prepare for winter",
+                      "desc": "",
+                      "article": "A 100+ character article body goes here...",
+                      "rate": 12,
+                      "date": "2026-08-13",
+                      "ownerId": {
+                        "_id": "65f1c2a4b8e4a30012a3b456",
+                        "name": "Jane Doe",
+                        "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg"
+                      },
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`articleId` is not a valid ObjectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "params": {
+                      "source": "params",
+                      "keys": ["articleId"],
+                      "message": "Invalid id format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No article with this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Article not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Articles"],
+        "summary": "Update an article (owner only)",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ArticleId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArticleRequest"
+              },
+              "example": {
+                "title": "How squirrels really prepare for winter"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Article updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Article updated successfully",
+                  "data": {
+                    "article": {
+                      "_id": "65f1c2a4b8e4a30012a3b457",
+                      "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                      "title": "How squirrels prepare for winter",
+                      "desc": "",
+                      "article": "A 100+ character article body goes here...",
+                      "rate": 12,
+                      "ownerId": "65f1c2a4b8e4a30012a3b456",
+                      "date": "2026-08-13",
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`articleId` invalid, or body is empty/failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": [],
+                      "message": "\"value\" must have at least 1 key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Authenticated user is not the owner of this article",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 403,
+                  "message": "Forbidden",
+                  "data": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No article with this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Article not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Articles"],
+        "summary": "Delete an article (owner only)",
+        "description": "Also decrements the owner's `articlesAmount` and removes the article from every user's `savedArticles`.",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ArticleId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Article deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Article deleted successfully",
+                  "data": {
+                    "article": {
+                      "_id": "65f1c2a4b8e4a30012a3b457",
+                      "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+                      "title": "How squirrels prepare for winter",
+                      "desc": "",
+                      "article": "A 100+ character article body goes here...",
+                      "rate": 12,
+                      "ownerId": "65f1c2a4b8e4a30012a3b456",
+                      "date": "2026-08-13",
+                      "createdAt": "2026-08-13T10:00:00.000Z",
+                      "updatedAt": "2026-08-13T10:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`articleId` is not a valid ObjectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "params": {
+                      "source": "params",
+                      "keys": ["articleId"],
+                      "message": "Invalid id format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Authenticated user is not the owner of this article",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 403,
+                  "message": "Forbidden",
+                  "data": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No article with this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Article not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionIdCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionId",
+        "description": "Set by /auth/register, /auth/login, /auth/refresh"
+      },
+      "accessTokenCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "Set by /auth/register, /auth/login, /auth/refresh. Both this and sessionId cookies are required together."
+      }
+    },
+    "parameters": {
+      "ArticleId": {
+        "name": "articleId",
+        "in": "path",
+        "required": true,
+        "description": "MongoDB ObjectId of the article",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{24}$"
+        },
+        "example": "65f1c2a4b8e4a30012a3b457"
+      }
+    },
+    "responses": {
+      "AuthError": {
+        "description": "Missing, invalid, or expired session",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "missingAccessToken": {
+                "summary": "Cookies absent",
+                "value": {
+                  "status": 401,
+                  "message": "Missing access token",
+                  "data": null
+                }
+              },
+              "invalidSession": {
+                "summary": "sessionId cookie is not a valid ObjectId",
+                "value": {
+                  "status": 401,
+                  "message": "Invalid session",
+                  "data": null
+                }
+              },
+              "sessionNotFound": {
+                "summary": "No matching session in the database",
+                "value": {
+                  "status": 401,
+                  "message": "Session not found",
+                  "data": null
+                }
+              },
+              "accessTokenExpired": {
+                "summary": "Access token TTL (15 min) elapsed",
+                "value": {
+                  "status": 401,
+                  "message": "Access token expired",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "ArticleExample": {
+        "value": {
+          "_id": "65f1c2a4b8e4a30012a3b457",
+          "img": "https://res.cloudinary.com/demo/image/upload/v1/harmoniq-app/articles/article_65f1c2a4b8e4a30012a3b456_1700000000000.jpg",
+          "title": "How squirrels prepare for winter",
+          "desc": "",
+          "article": "A 100+ character article body goes here...",
+          "rate": 12,
+          "ownerId": "65f1c2a4b8e4a30012a3b456",
+          "date": "2026-08-13",
+          "createdAt": "2026-08-13T10:00:00.000Z",
+          "updatedAt": "2026-08-13T10:00:00.000Z"
+        }
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "OK"
+          },
+          "data": {
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": ["status", "message", "data"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "Something went wrong"
+          },
+          "data": {
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": ["status", "message", "data"]
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "description": "Shape produced by celebrate's errors() middleware for Joi validation failures on body/params/query.",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "validation": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "body",
+                    "params",
+                    "query",
+                    "headers",
+                    "cookies",
+                    "signedCookies"
+                  ]
+                },
+                "keys": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["statusCode", "error", "message", "validation"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65f1c2a4b8e4a30012a3b456"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane.doe@example.com"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "articlesAmount": {
+            "type": "integer",
+            "example": 3
+          },
+          "savedArticles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserPublic": {
+        "type": "object",
+        "description": "Fields returned by GET /users/{id} (subset of User)",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "articlesAmount": {
+            "type": "integer"
+          }
+        }
+      },
+      "Article": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65f1c2a4b8e4a30012a3b457"
+          },
+          "img": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 48
+          },
+          "desc": {
+            "type": "string"
+          },
+          "article": {
+            "type": "string",
+            "minLength": 100,
+            "maxLength": 4000
+          },
+          "rate": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ownerId": {
+            "description": "Plain ObjectId string on list/create/update/delete endpoints; populated object (`_id`,`name`,`avatarUrl`) on GET /articles/{articleId}",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/ArticleOwnerPopulated"
+              }
+            ]
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-08-13"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ArticleOwnerPopulated": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "perPage": {
+            "type": "integer",
+            "example": 10
+          },
+          "totalItems": {
+            "type": "integer",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 5
+          },
+          "hasPreviousPage": {
+            "type": "boolean"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 64
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 64
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64
+          }
+        }
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "description": "At least one property is required.",
+        "minProperties": 1,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 64
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "Direct avatar URL (not a file upload)"
+          }
+        }
+      },
+      "SavedArticleRequest": {
+        "type": "object",
+        "required": ["articleId"],
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the article",
+            "example": "65f1c2a4b8e4a30012a3b457"
+          }
+        }
+      },
+      "UpdateArticleRequest": {
+        "type": "object",
+        "description": "At least one property is required.",
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 48
+          },
+          "article": {
+            "type": "string",
+            "minLength": 100,
+            "maxLength": 4000
+          },
+          "img": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

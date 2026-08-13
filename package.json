@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "swagger": "node src/swagger.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,8 +24,7 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.6.0",
     "globals": "^17.7.0",
-    "nodemon": "^3.1.14",
-    "swagger-autogen": "^2.23.7"
+    "nodemon": "^3.1.14"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
