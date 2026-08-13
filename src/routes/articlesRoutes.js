@@ -1,5 +1,3 @@
-// src/routes/articlesRoutes.js
-
 import { Router } from 'express';
 import { celebrate } from 'celebrate';
 import { authenticate } from '../middleware/authenticate.js';
@@ -35,7 +33,7 @@ router.post(
   celebrate(createArticleSchema),
   createArticle,
 );
-
+// Додати articles/categories route для отримання категорій статей
 router.get('/categories', getCategoriesController);
 
 router.patch(
