@@ -1,5 +1,3 @@
-// src/validations/articlesValidation.js
-
 import { Joi, Segments } from 'celebrate';
 import { isValidObjectId } from 'mongoose';
 

@@ -33,8 +33,8 @@ router.post(
   celebrate(createArticleSchema),
   createArticle,
 );
-// Додати articles/categories route для отримання категорій статей
-router.get('/categories', getCategoriesController);
+
+router.get('/articles/categories', getCategoriesController);
 
 router.patch(
   '/articles/:articleId',

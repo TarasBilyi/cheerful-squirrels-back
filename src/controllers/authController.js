@@ -1,5 +1,3 @@
-// src/controllers/authController.js
-
 import createHttpError from 'http-errors';
 import { createSession, setSessionCookies } from '../services/auth.js';
 import { User } from '../models/user.js';

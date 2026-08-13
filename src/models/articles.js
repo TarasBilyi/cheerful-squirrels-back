@@ -1,5 +1,3 @@
-// src/models/articles.js
-
 import { Schema, model } from 'mongoose';
 
 const articleSchema = new Schema(
