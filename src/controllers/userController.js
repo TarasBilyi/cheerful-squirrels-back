@@ -144,35 +144,47 @@ export const removeSavedArticle = async (req, res, next) => {
   }
 };
 
-export const updateUser = async (req, res) => {
-  const userId = req.user._id;
-  const { name, email, avatar } = req.body;
-  const update = {};
+export const updateUser = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { name, email, avatar } = req.body;
+    const update = {};
 
-  if (name !== undefined) update.name = name;
-  if (email !== undefined) update.email = email;
-  if (avatar !== undefined) update.avatarUrl = avatar;
+    if (name !== undefined) update.name = name.trim();
 
-  if (email !== undefined) {
-    const existingUser = await User.findOne({
-      email,
-      _id: { $ne: userId },
+    if (email !== undefined) {
+      const normalizedEmail = email.trim().toLowerCase();
+      update.email = normalizedEmail;
+
+      const existingUser = await User.findOne({
+        email: normalizedEmail,
+        _id: { $ne: userId },
+      });
+
+      if (existingUser) {
+        throw createHttpError(409, 'Email in use');
+      }
+    }
+
+    if (avatar !== undefined) update.avatarUrl = avatar;
+
+    const updatedUser = await User.findOneAndUpdate({ _id: userId }, update, {
+      new: true,
+      runValidators: true,
     });
 
-    if (existingUser) {
-      throw createHttpError(409, 'Email in use');
+    if (!updatedUser) {
+      throw createHttpError(404, 'User not found');
     }
-  }
 
-  const updatedUser = await User.findOneAndUpdate({ _id: userId }, update, {
-    returnDocument: 'after',
-    runValidators: true,
-  });
+    return sendSuccess(res, 200, 'User updated successfully', {
+      user: updatedUser,
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return next(createHttpError(409, 'Email in use'));
+    }
 
-  if (!updatedUser) {
-    throw createHttpError(404, 'User not found');
+    return next(error);
   }
-  return sendSuccess(res, 200, 'User updated successfully', {
-    user: updatedUser,
-  });
 };
