@@ -23,6 +23,8 @@ const router = Router();
 
 router.get('/articles', celebrate(getArticlesSchema), getArticlesController);
 
+router.get('/articles/categories', getCategoriesController);
+
 router.get('/articles/:articleId', celebrate(articleIdSchema), getArticleById);
 
 router.post(
@@ -33,8 +35,6 @@ router.post(
   celebrate(createArticleSchema),
   createArticle,
 );
-
-router.get('/articles/categories', getCategoriesController);
 
 router.patch(
   '/articles/:articleId',

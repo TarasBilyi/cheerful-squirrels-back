@@ -1,10 +1,12 @@
 import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import { errors } from 'celebrate';
-import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger.json' with { type: 'json' };
 import cookieParser from 'cookie-parser';
+import { createRequire } from 'node:module';
+import swaggerUi from 'swagger-ui-express';
 
 import { connectMongoDB } from './db/connectMongoDB.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -17,6 +19,16 @@ import articlesRoutes from './routes/articlesRoutes.js';
 const PORT = process.env.PORT ?? 3000;
 const app = express();
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const openapiDocument = require(path.join(__dirname, '../docs/openapi.json'));
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
+
+app.get('/docs.json', (req, res) => {
+  res.json(openapiDocument);
+});
+
 app.use(logger);
 app.use(express.json());
 app.use(
@@ -27,7 +39,6 @@ app.use(
 );
 app.use(cookieParser());
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(authRoutes);
 app.use(userRouter);
 app.use(articlesRoutes);

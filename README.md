@@ -11,7 +11,6 @@
 - **Cloudinary** — зберігання зображень
 - **multer** + **sharp** — завантаження та стиснення фото
 - **cookie-parser** — робота з httpOnly-куками
-- **Swagger UI** — документація API (`/docs`)
 
 ## Авторизація
 
@@ -34,20 +33,20 @@ npm run dev             # запуск через nodemon (з автоперез
 npm run start            # звичайний запуск
 ```
 
-Після запуску сервер доступний на `http://localhost:<PORT>`, а Swagger-документація — на `http://localhost:<PORT>/docs`.
+Після запуску сервер доступний на `http://localhost:<PORT>`.
 
 ## Змінні середовища (`.env`)
 
-| Змінна | Опис |
-|---|---|
-| `PORT` | Порт, на якому запускається сервер (наприклад `3000`) |
-| `NODE_ENV` | `development` / `production` |
-| `MONGO_URL` | Рядок підключення до MongoDB (локальної або Atlas) |
-| `JWT_SECRET` | Секретний рядок |
-| `FRONTEND_DOMAIN` | Домен фронтенду — має використовуватись у CORS-налаштуваннях |
-| `CLOUDINARY_CLOUD_NAME` | Ім'я хмари Cloudinary |
-| `CLOUDINARY_API_KEY` | API-ключ Cloudinary |
-| `CLOUDINARY_API_SECRET` | API-секрет Cloudinary |
+| Змінна                  | Опис                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| `PORT`                  | Порт, на якому запускається сервер (наприклад `3000`)        |
+| `NODE_ENV`              | `development` / `production`                                 |
+| `MONGO_URL`             | Рядок підключення до MongoDB (локальної або Atlas)           |
+| `JWT_SECRET`            | Секретний рядок                                              |
+| `FRONTEND_DOMAIN`       | Домен фронтенду — має використовуватись у CORS-налаштуваннях |
+| `CLOUDINARY_CLOUD_NAME` | Ім'я хмари Cloudinary                                        |
+| `CLOUDINARY_API_KEY`    | API-ключ Cloudinary                                          |
+| `CLOUDINARY_API_SECRET` | API-секрет Cloudinary                                        |
 
 ## Структура проєкту
 
@@ -63,42 +62,42 @@ src/
 ├── utils/            # допоміжні функції (відповіді, завантаження в Cloudinary)
 ├── validations/      # Joi-схеми валідації
 ├── server.js         # точка входу
-├── swagger.js / swagger.json  # автогенерація/зберігання Swagger-документації
 ```
 
 ## API — основні ендпоінти
 
 ### Auth
-| Метод | Шлях | Опис |
-|---|---|---|
-| POST | `/auth/register` | Реєстрація `{ name, email, password }` |
-| POST | `/auth/login` | Вхід `{ email, password }` |
-| POST | `/auth/logout` | Вихід, очищення сесії/кук |
-| POST | `/auth/refresh` | Оновлення access/refresh токенів |
+
+| Метод | Шлях             | Опис                                   |
+| ----- | ---------------- | -------------------------------------- |
+| POST  | `/auth/register` | Реєстрація `{ name, email, password }` |
+| POST  | `/auth/login`    | Вхід `{ email, password }`             |
+| POST  | `/auth/logout`   | Вихід, очищення сесії/кук              |
+| POST  | `/auth/refresh`  | Оновлення access/refresh токенів       |
 
 ### Users
-| Метод | Шлях | Опис |
-|---|---|---|
-| GET | `/users/me` | Поточний користувач (потрібна авторизація) |
-| GET | `/users/:id` | Публічний профіль користувача |
-| GET | `/users/:userId/articles` | Статті, створені користувачем |
-| GET | `/users/saved` | Збережені статті поточного користувача |
-| POST | `/saved` | Додати статтю в закладки `{ articleId }` |
-| DELETE | `/saved` | Прибрати статтю із закладок `{ articleId }` |
-| PATCH | `/users/me` | Оновити профіль `{ name?, email?, avatar? }` |
-| PATCH | `/users/me/avatar` | Оновити аватарку (form-data, поле `avatar`) |
+
+| Метод  | Шлях                      | Опис                                         |
+| ------ | ------------------------- | -------------------------------------------- |
+| GET    | `/users/me`               | Поточний користувач (потрібна авторизація)   |
+| GET    | `/users/:id`              | Публічний профіль користувача                |
+| GET    | `/users/:userId/articles` | Статті, створені користувачем                |
+| GET    | `/users/saved`            | Збережені статті поточного користувача       |
+| POST   | `/saved`                  | Додати статтю в закладки `{ articleId }`     |
+| DELETE | `/saved`                  | Прибрати статтю із закладок `{ articleId }`  |
+| PATCH  | `/users/me`               | Оновити профіль `{ name?, email?, avatar? }` |
+| PATCH  | `/users/me/avatar`        | Оновити аватарку (form-data, поле `avatar`)  |
 
 ### Articles
-| Метод | Шлях | Опис |
-|---|---|---|
-| GET | `/articles` | Список статей (пагінація, категорії, сортування) |
-| GET | `/articles/:articleId` | Одна стаття |
-| POST | `/articles` | Створити статтю (form-data: `photo`, `title`, `article`) — потрібна авторизація |
-| PATCH | `/articles/:articleId` | Оновити статтю — лише власник |
-| DELETE | `/articles/:articleId` | Видалити статтю — лише власник |
-| GET | `/categories` | Список категорій: `popular`, `general`, `recommended` |
 
-Повний опис полів запитів/відповідей — у Swagger UI: `/docs`.
+| Метод  | Шлях                   | Опис                                                                            |
+| ------ | ---------------------- | ------------------------------------------------------------------------------- |
+| GET    | `/articles`            | Список статей (пагінація, категорії, сортування)                                |
+| GET    | `/articles/:articleId` | Одна стаття                                                                     |
+| POST   | `/articles`            | Створити статтю (form-data: `photo`, `title`, `article`) — потрібна авторизація |
+| PATCH  | `/articles/:articleId` | Оновити статтю — лише власник                                                   |
+| DELETE | `/articles/:articleId` | Видалити статтю — лише власник                                                  |
+| GET    | `/categories`          | Список категорій: `popular`, `general`, `recommended`                           |
 
 ## Відомі обмеження
 
@@ -106,9 +105,7 @@ src/
 
 ## Скрипти
 
-| Команда | Опис |
-|---|---|
-| `npm run dev` | Запуск у режимі розробки (nodemon) |
-| `npm run start` | Звичайний запуск |
-| `npm run swagger` | Перегенерувати `swagger.json` |
-
+| Команда         | Опис                               |
+| --------------- | ---------------------------------- |
+| `npm run dev`   | Запуск у режимі розробки (nodemon) |
+| `npm run start` | Звичайний запуск                   |
