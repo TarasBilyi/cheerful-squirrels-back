@@ -1,4 +1,5 @@
 import createHttpError from 'http-errors';
+import { isValidObjectId } from 'mongoose';
 import { createSession, setSessionCookies } from '../services/auth.js';
 import { User } from '../models/user.js';
 import bcrypt from 'bcrypt';
@@ -7,8 +8,9 @@ import { sendSuccess } from '../utils/response.js';
 
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
+  const normalizedEmail = email.trim().toLowerCase();
 
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     throw createHttpError(400, 'Email in use');
   }
@@ -17,7 +19,7 @@ export const registerUser = async (req, res) => {
 
   const newUser = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password: hashedPassword,
   });
 
@@ -45,7 +47,8 @@ export const logoutUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+  const normalizedEmail = req.body.email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     throw createHttpError(401, 'Invalid credentials');
   }
@@ -71,6 +74,10 @@ export const refreshUserSession = async (req, res) => {
 
   if (!sessionId || !refreshToken) {
     throw createHttpError(401, 'Missing tokens');
+  }
+
+  if (!isValidObjectId(sessionId)) {
+    throw createHttpError(401, 'Invalid session');
   }
 
   const session = await Session.findOne({
