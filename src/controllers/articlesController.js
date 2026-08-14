@@ -10,11 +10,11 @@ export const createArticle = async (req, res) => {
 
   const photoUrl = await saveFileToCloudinary(req.file);
 
-  const note = await Article.create({
+  const article = await Article.create({
     ...req.body,
-    photo: photoUrl,
+    img: photoUrl,
     date: new Date().toISOString().slice(0, 10),
-    author: req.user._id,
+    ownerId: req.user._id,
   })
 
   return res.status(201).json(article);
