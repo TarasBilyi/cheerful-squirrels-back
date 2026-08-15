@@ -4,6 +4,13 @@ import { User } from '../models/user.js';
 import { Article } from '../models/articles.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendSuccess } from '../utils/response.js';
+import { getAuthors } from '../services/users.js';
+
+export const getAuthorsController = async (req, res) => {
+  const result = await getAuthors(req.query);
+
+  return sendSuccess(res, 200, 'Authors retrieved successfully', result);
+};
 
 export const updateUserAvatar = async (req, res, next) => {
   try {
