@@ -9,7 +9,7 @@ import { getAuthors } from '../services/users.js';
 export const getAuthorsController = async (req, res) => {
   const result = await getAuthors(req.query);
 
-  return sendSuccess(res, 200, 'Authors retrieved successfully', result);
+  return sendSuccess(res, 200, 'Users retrieved successfully', result);
 };
 
 export const updateUserAvatar = async (req, res, next) => {

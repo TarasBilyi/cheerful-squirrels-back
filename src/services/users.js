@@ -14,9 +14,9 @@ export const getAuthors = async ({
   const filter = { articlesAmount: { $gt: 0 } };
   const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
-  const [authors, totalItems] = await Promise.all([
+  const [users, totalItems] = await Promise.all([
     User.find(filter)
-      .select('_id name avatarUrl articlesAmount')
+      .select('_id name avatarUrl')
       .sort(sort)
       .skip(skip)
       .limit(currentPerPage),
@@ -24,7 +24,7 @@ export const getAuthors = async ({
   ]);
 
   return {
-    authors,
+    users,
     pagination: {
       page: currentPage,
       perPage: currentPerPage,
