@@ -84,14 +84,26 @@ export const getUserById = async (req, res, next) => {
 };
 
 export const getSavedArticles = async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const perPage = Number(req.query.perPage) || 10;
   const user = await User.findById(req.user._id).populate('savedArticles');
 
   if (!user) {
     throw createHttpError(404, 'User not found');
   }
-
+  const totalItems = user.savedArticles.length;
+  const skip = (page - 1) * perPage;
+  const articles = user.savedArticles.slice(skip, skip + perPage);
   return sendSuccess(res, 200, 'Saved articles retrieved successfully', {
-    articles: user.savedArticles,
+    articles,
+    pagination: {
+      page,
+      perPage,
+      totalItems,
+      totalPages: Math.ceil(totalItems / perPage) || 0,
+      hasPreviousPage: page > 1,
+      hasNextPage: page * perPage < totalItems,
+    },
   });
 };
 
