@@ -7,6 +7,7 @@ import {
   addSavedArticle,
   removeSavedArticle,
   updateUser,
+  getAuthorsController,
 } from '../controllers/userController.js';
 import {
   getSavedArticles,
@@ -19,11 +20,13 @@ import { updateUserSchema } from '../validations/authValidation.js';
 import {
   userArticlesSchema,
   userIdSchema,
+  getAuthorsSchema,
 } from '../validations/userValidation.js';
 import { savedArticleSchema } from '../validations/articlesValidation.js';
 
 const router = Router();
 
+router.get('/users', celebrate(getAuthorsSchema), getAuthorsController);
 router.get('/users/saved', authenticate, getSavedArticles);
 router.get('/users/me', authenticate, getCurrentUser);
 router.get(
