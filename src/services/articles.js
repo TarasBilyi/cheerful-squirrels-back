@@ -16,7 +16,19 @@ export const getArticles = async ({
     const totalItems = await Article.countDocuments();
     const sampleSize = Math.min(totalItems, skip + currentPerPage);
     const sampledArticles = sampleSize
-      ? await Article.aggregate([{ $sample: { size: sampleSize } }])
+      ? await Article.aggregate([
+          { $sample: { size: sampleSize } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'ownerId',
+              foreignField: '_id',
+              as: 'ownerId',
+              pipeline: [{ $project: { _id: 1, name: 1, avatarUrl: 1 } }],
+            },
+          },
+          { $unwind: { path: '$ownerId', preserveNullAndEmptyArrays: true } },
+        ])
       : [];
     const articles = sampledArticles.slice(skip, skip + currentPerPage);
 
@@ -39,7 +51,11 @@ export const getArticles = async ({
       : { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
   const [articles, totalItems] = await Promise.all([
-    Article.find().sort(sort).skip(skip).limit(currentPerPage),
+    Article.find()
+      .sort(sort)
+      .skip(skip)
+      .limit(currentPerPage)
+      .populate('ownerId', '_id name avatarUrl'),
     Article.countDocuments(),
   ]);
 
