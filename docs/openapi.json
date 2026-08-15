@@ -362,6 +362,135 @@
         }
       }
     },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get list of authors (users with at least one published article)",
+        "description": "Returns a paginated list of users that have published articles. `articlesAmount` is calculated from real documents in the `articles` collection (not the denormalized field).",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            },
+            "description": "Items per page (max 20)"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["articlesAmount", "name", "createdAt"],
+              "default": "articlesAmount"
+            },
+            "description": "Field to sort by"
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            },
+            "description": "Sort direction"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authors list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "users": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "65f1c2a4b8e4a30012a3b456"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Jane Doe"
+                                  },
+                                  "avatarUrl": {
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "articlesAmount": {
+                                    "type": "integer",
+                                    "example": 3
+                                  }
+                                }
+                              }
+                            },
+                            "pagination": {
+                              "$ref": "#/components/schemas/Pagination"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Users retrieved successfully",
+                  "data": {
+                    "users": [
+                      {
+                        "_id": "65f1c2a4b8e4a30012a3b456",
+                        "name": "Jane Doe",
+                        "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                        "articlesAmount": 3
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "perPage": 10,
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "hasPreviousPage": false,
+                      "hasNextPage": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (invalid query params)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/me": {
       "get": {
         "tags": ["Users"],
