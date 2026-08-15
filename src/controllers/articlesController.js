@@ -28,31 +28,6 @@ export const createArticle = async (req, res) => {
   return sendSuccess(res, 201, 'Article created successfully', { article });
 };
 
-export const getArticle = async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const perPage = Number(req.query.perPage) || 10;
-
-  const skip = (page - 1) * perPage;
-
-  const [articles, totalItems] = await Promise.all([
-    Article.find().skip(skip).limit(perPage).sort({ createdAt: -1 }),
-
-    Article.countDocuments(),
-  ]);
-
-  const totalPages = Math.ceil(totalItems / perPage);
-
-  return sendSuccess(res, 200, 'Articles retrieved successfully', {
-    articles,
-    pagination: {
-      page,
-      perPage,
-      totalItems,
-      totalPages,
-    },
-  });
-};
-
 export const getArticleById = async (req, res) => {
   const article = await Article.findById(req.params.articleId).populate(
     'ownerId',

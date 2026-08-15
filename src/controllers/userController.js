@@ -95,20 +95,40 @@ export const getSavedArticles = async (req, res) => {
   });
 };
 
-export const getCreatedArticles = async (req, res) => {
-  const { userId } = req.params;
+export const getCreatedArticles = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 10;
 
-  if (!isValidObjectId(userId)) {
-    throw createHttpError(400, 'Invalid user id');
+    if (!isValidObjectId(userId)) {
+      throw createHttpError(400, 'Invalid user id');
+    }
+
+    const skip = (page - 1) * perPage;
+
+    const [articles, totalItems] = await Promise.all([
+      Article.find({ ownerId: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPage),
+      Article.countDocuments({ ownerId: userId }),
+    ]);
+
+    return sendSuccess(res, 200, 'User articles retrieved successfully', {
+      articles,
+      pagination: {
+        page,
+        perPage,
+        totalItems,
+        totalPages: Math.ceil(totalItems / perPage) || 0,
+        hasPreviousPage: page > 1,
+        hasNextPage: page * perPage < totalItems,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const articles = await Article.find({
-    ownerId: userId,
-  });
-
-  return sendSuccess(res, 200, 'User articles retrieved successfully', {
-    articles,
-  });
 };
 
 export const addSavedArticle = async (req, res, next) => {
