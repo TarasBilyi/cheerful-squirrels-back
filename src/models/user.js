@@ -24,6 +24,12 @@ const userSchema = new Schema(
         ref: 'Article',
       },
     ],
+    subscriptions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     email: {
       type: String,
       unique: true,
