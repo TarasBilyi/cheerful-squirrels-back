@@ -44,9 +44,20 @@ export const getArticleById = async (req, res) => {
 export const updateArticle = async (req, res) => {
   const { articleId } = req.params;
 
+  const updatePayload = { ...req.body };
+
+  if (req.file) {
+    const uploadResult = await saveFileToCloudinary(
+      req.file.buffer,
+      req.user._id.toString(),
+      'article',
+    );
+    updatePayload.img = uploadResult.secure_url;
+  }
+
   const updatedArticle = await Article.findOneAndUpdate(
     { _id: articleId, ownerId: req.user._id },
-    req.body,
+    updatePayload,
     {
       returnDocument: 'after',
       runValidators: true,

@@ -8,6 +8,7 @@ const objectIdValidator = (value, helpers) => {
 export const createArticleSchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().min(3).max(48).required(),
+    desc: Joi.string().trim().min(10).max(200).required(),
     article: Joi.string().min(100).max(4000).required(),
   }),
 };
@@ -30,6 +31,7 @@ export const updateArticleSchema = {
   }),
   [Segments.BODY]: Joi.object({
     title: Joi.string().min(3).max(48),
+    desc: Joi.string().trim().min(10).max(200),
     article: Joi.string().min(100).max(4000),
     img: Joi.string().uri(),
   }).min(1),
