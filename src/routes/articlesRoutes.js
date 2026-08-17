@@ -39,6 +39,8 @@ router.post(
 router.patch(
   '/articles/:articleId',
   authenticate,
+  upload.single('photo'),
+  compressImage,
   celebrate(updateArticleSchema),
   checkArticleOwner,
   updateArticle,
