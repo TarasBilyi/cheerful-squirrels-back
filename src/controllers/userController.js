@@ -210,6 +210,123 @@ export const removeSavedArticle = async (req, res, next) => {
   }
 };
 
+export const subscribeToAuthor = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { authorId } = req.body;
+
+    if (!isValidObjectId(authorId)) {
+      throw createHttpError(400, 'Invalid author id');
+    }
+
+    if (authorId === userId.toString()) {
+      throw createHttpError(400, 'You cannot subscribe to yourself');
+    }
+
+    if (!(await User.exists({ _id: authorId }))) {
+      throw createHttpError(404, 'Author not found');
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { subscriptions: authorId } },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    return sendSuccess(res, 200, 'Subscribed to author', {
+      subscriptions: updatedUser.subscriptions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unsubscribeFromAuthor = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { authorId } = req.body;
+
+    if (!isValidObjectId(authorId)) {
+      throw createHttpError(400, 'Invalid author id');
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, subscriptions: authorId },
+      { $pull: { subscriptions: authorId } },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      const userExists = await User.exists({ _id: userId });
+      if (!userExists) {
+        throw createHttpError(404, 'User not found');
+      }
+
+      throw createHttpError(404, 'Author not found in subscriptions');
+    }
+
+    return sendSuccess(res, 200, 'Unsubscribed from author', {
+      subscriptions: updatedUser.subscriptions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSubscribedAuthorsController = async (req, res, next) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 10;
+
+    const user = await User.findById(req.user._id).populate({
+      path: 'subscriptions',
+      select: '_id name avatarUrl',
+    });
+
+    if (!user) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    const totalItems = user.subscriptions.length;
+    const skip = (page - 1) * perPage;
+    const pageAuthors = user.subscriptions.slice(skip, skip + perPage);
+
+    const authorIds = pageAuthors.map(author => author._id);
+    const articlesCounts = await Article.aggregate([
+      { $match: { ownerId: { $in: authorIds } } },
+      { $group: { _id: '$ownerId', count: { $sum: 1 } } },
+    ]);
+    const countMap = new Map(
+      articlesCounts.map(item => [item._id.toString(), item.count]),
+    );
+
+    const authors = pageAuthors.map(author => ({
+      _id: author._id,
+      name: author.name,
+      avatarUrl: author.avatarUrl,
+      articlesAmount: countMap.get(author._id.toString()) || 0,
+    }));
+
+    return sendSuccess(res, 200, 'Subscriptions retrieved successfully', {
+      authors,
+      pagination: {
+        page,
+        perPage,
+        totalItems,
+        totalPages: Math.ceil(totalItems / perPage) || 0,
+        hasPreviousPage: page > 1,
+        hasNextPage: page * perPage < totalItems,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateUser = async (req, res, next) => {
   try {
     const userId = req.user._id;
