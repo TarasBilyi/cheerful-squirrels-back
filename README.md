@@ -97,7 +97,7 @@ src/
 | POST   | `/articles`            | Створити статтю (form-data: `photo`, `title`, `article`) — потрібна авторизація |
 | PATCH  | `/articles/:articleId` | Оновити статтю — лише власник                                                   |
 | DELETE | `/articles/:articleId` | Видалити статтю — лише власник                                                  |
-| GET    | `/categories`          | Список категорій: `popular`, `general`, `recommended`                           |
+| GET    | `/articles/categories`          | Список категорій: `popular`, `general`, `recommended`                           |
 
 ## Відомі обмеження
 
