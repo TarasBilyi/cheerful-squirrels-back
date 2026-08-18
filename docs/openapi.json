@@ -371,7 +371,11 @@
           {
             "name": "page",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "default": 1 },
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
             "description": "Page number"
           },
           {
@@ -413,7 +417,9 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -788,7 +794,15 @@
                         "createdAt": "2026-08-13T10:00:00.000Z",
                         "updatedAt": "2026-08-13T10:00:00.000Z"
                       }
-                    ]
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "perPage": 10,
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "hasPreviousPage": false,
+                      "hasNextPage": false
+                    }
                   }
                 }
               }
@@ -807,6 +821,289 @@
                 "example": {
                   "status": 404,
                   "message": "User not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            },
+            "description": "Items per page (max 20)"
+          }
+        ]
+      }
+    },
+    "/users/subscriptions": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get authors the current user is subscribed to",
+        "description": "Returns a paginated list of authors the authenticated user follows, with each author's `articlesAmount` computed from real article documents.",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            },
+            "description": "Items per page (max 20)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscriptions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Subscriptions retrieved successfully",
+                  "data": {
+                    "authors": [
+                      {
+                        "_id": "65f1c2a4b8e4a30012a3b456",
+                        "name": "Jane Doe",
+                        "avatarUrl": "https://ac.goit.global/fullstack/react/default-avatar.jpg",
+                        "articlesAmount": 3
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "perPage": 10,
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "hasPreviousPage": false,
+                      "hasNextPage": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (invalid query params)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Subscribe the current user to an author",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeAuthorRequest"
+              },
+              "example": {
+                "authorId": "65f1c2a4b8e4a30012a3b456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscribed to author",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Subscribed to author",
+                  "data": {
+                    "subscriptions": ["65f1c2a4b8e4a30012a3b456"]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`authorId` is missing/invalid, or equals the current user's own id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "examples": {
+                  "invalidId": {
+                    "summary": "Not a valid ObjectId",
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Validation failed",
+                      "validation": {
+                        "body": {
+                          "source": "body",
+                          "keys": ["authorId"],
+                          "message": "Invalid id format"
+                        }
+                      }
+                    }
+                  },
+                  "selfSubscribe": {
+                    "summary": "Trying to subscribe to yourself",
+                    "value": {
+                      "status": 400,
+                      "message": "You cannot subscribe to yourself",
+                      "data": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Author does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Author not found",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Unsubscribe the current user from an author",
+        "security": [
+          {
+            "sessionIdCookie": [],
+            "accessTokenCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeAuthorRequest"
+              },
+              "example": {
+                "authorId": "65f1c2a4b8e4a30012a3b456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unsubscribed from author",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": 200,
+                  "message": "Unsubscribed from author",
+                  "data": {
+                    "subscriptions": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`authorId` is missing or not a valid ObjectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "error": "Bad Request",
+                  "message": "Validation failed",
+                  "validation": {
+                    "body": {
+                      "source": "body",
+                      "keys": ["authorId"],
+                      "message": "Invalid id format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "404": {
+            "description": "Authenticated user no longer exists, or author is not in the subscriptions list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "message": "Author not found in subscriptions",
                   "data": null
                 }
               }
@@ -910,6 +1207,27 @@
               "pattern": "^[a-fA-F0-9]{24}$"
             },
             "example": "65f1c2a4b8e4a30012a3b456"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            },
+            "description": "Items per page (max 20)"
           }
         ],
         "responses": {
@@ -937,7 +1255,15 @@
                         "createdAt": "2026-08-13T10:00:00.000Z",
                         "updatedAt": "2026-08-13T10:00:00.000Z"
                       }
-                    ]
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "perPage": 10,
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "hasPreviousPage": false,
+                      "hasNextPage": false
+                    }
                   }
                 }
               }
@@ -1919,6 +2245,13 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "subscriptions": {
+            "type": "array",
+            "description": "ObjectIds of authors this user is subscribed to",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -2103,6 +2436,17 @@
             "type": "string",
             "description": "MongoDB ObjectId of the article",
             "example": "65f1c2a4b8e4a30012a3b457"
+          }
+        }
+      },
+      "SubscribeAuthorRequest": {
+        "type": "object",
+        "required": ["authorId"],
+        "properties": {
+          "authorId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the author to (un)subscribe",
+            "example": "65f1c2a4b8e4a30012a3b456"
           }
         }
       },
