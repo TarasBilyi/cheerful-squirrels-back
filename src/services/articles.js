@@ -45,10 +45,23 @@ export const getArticles = async ({
     };
   }
 
-  const sort =
-    category === 'popular'
-      ? { rate: -1 }
-      : { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+  // const sort =
+  //   category === 'popular'
+  //     ? { rate: -1 }
+  //     : { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+  const direction = sortOrder === 'asc' ? 1 : -1;
+
+const sort =
+  category === 'popular'
+    ? {
+        rate: -1,
+        _id: -1,
+      }
+    : {
+        [sortBy]: direction,
+        _id: direction,
+      };
 
   const [articles, totalItems] = await Promise.all([
     Article.find()
