@@ -22,3 +22,9 @@ export const updateUserSchema = {
     avatar: Joi.string().uri(),
   }).min(1),
 };
+
+export const checkEmailSchema = {
+  [Segments.QUERY]: Joi.object({
+    email: Joi.string().email().max(64).required(),
+  }),
+};

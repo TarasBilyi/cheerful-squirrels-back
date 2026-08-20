@@ -6,12 +6,16 @@ import bcrypt from 'bcrypt';
 import { Session } from '../models/session.js';
 import { sendSuccess } from '../utils/response.js';
 
+const isEmailTaken = async (normalizedEmail) => {
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  return Boolean(existingUser);
+};
+
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   const normalizedEmail = email.trim().toLowerCase();
 
-  const existingUser = await User.findOne({ email: normalizedEmail });
-  if (existingUser) {
+  if (await isEmailTaken(normalizedEmail)) {
     throw createHttpError(400, 'Email in use');
   }
 
@@ -30,6 +34,16 @@ export const registerUser = async (req, res) => {
   return sendSuccess(res, 201, 'User registered successfully', {
     user: newUser,
   });
+};
+
+export const checkEmail = async (req, res) => {
+  const normalizedEmail = req.query.email.trim().toLowerCase();
+
+  if (await isEmailTaken(normalizedEmail)) {
+    throw createHttpError(409, 'Email already in use');
+  }
+
+  return sendSuccess(res, 200, 'Email is available', { available: true });
 };
 
 export const logoutUser = async (req, res) => {
