@@ -363,8 +363,13 @@ export const updateUser = async (req, res, next) => {
       throw createHttpError(404, 'User not found');
     }
 
+    const articlesAmount = await Article.countDocuments({ ownerId: userId });
+
     return sendSuccess(res, 200, 'User updated successfully', {
-      user: updatedUser,
+      user: {
+        ...updatedUser.toObject(),
+        articlesAmount,
+      },
     });
   } catch (error) {
     if (error?.code === 11000) {
