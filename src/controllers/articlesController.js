@@ -5,27 +5,39 @@ import { getArticles } from '../services/articles.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { sendSuccess } from '../utils/response.js';
 
+const usersCurrentlyCreatingArticle = new Set();
+
 export const createArticle = async (req, res) => {
   if (!req.file) {
     throw createHttpError(400, 'Missing article photo');
   }
 
-  const uploadResult = await saveFileToCloudinary(
-    req.file.buffer,
-    req.user._id.toString(),
-    'article',
-  );
+  const ownerId = req.user._id.toString();
 
-  const article = await Article.create({
-    ...req.body,
-    img: uploadResult.secure_url,
-    date: new Date().toISOString().slice(0, 10),
-    ownerId: req.user._id,
-  });
+  if (usersCurrentlyCreatingArticle.has(ownerId)) {
+    throw createHttpError(
+      409,
+      'An article is already being published for this user. Please wait for it to finish.',
+    );
+  }
+  usersCurrentlyCreatingArticle.add(ownerId);
 
-  await User.updateOne({ _id: req.user._id }, { $inc: { articlesAmount: 1 } });
+  try {
+    const uploadResult = await saveFileToCloudinary(req.file.buffer, ownerId, 'article');
 
-  return sendSuccess(res, 201, 'Article created successfully', { article });
+    const article = await Article.create({
+      ...req.body,
+      img: uploadResult.secure_url,
+      date: new Date().toISOString().slice(0, 10),
+      ownerId: req.user._id,
+    });
+
+    await User.updateOne({ _id: req.user._id }, { $inc: { articlesAmount: 1 } });
+
+    return sendSuccess(res, 201, 'Article created successfully', { article });
+  } finally {
+    usersCurrentlyCreatingArticle.delete(ownerId);
+  }
 };
 
 export const getArticleById = async (req, res) => {
