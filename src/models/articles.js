@@ -19,6 +19,10 @@ const articleSchema = new Schema(
       required: true,
       minlength: 100,
       maxlength: 4000,
+      validate: {
+        validator: value => /\S/.test(value.replace(/<[^>]*>/g, ' ')),
+        message: 'Article body must contain visible text, not just whitespace',
+      },
     },
     rate: { type: Number, default: 0, min: 0 },
     ownerId: {
