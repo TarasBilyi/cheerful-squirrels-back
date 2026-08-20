@@ -5,11 +5,22 @@ const objectIdValidator = (value, helpers) => {
   return !isValidObjectId(value) ? helpers.message('Invalid id format') : value;
 };
 
+const notBlankArticleValidator = (value, helpers) => {
+  const visibleText = value.replace(/<[^>]*>/g, ' ');
+  return /\S/.test(visibleText)
+    ? value
+    : helpers.message('Article body must contain visible text, not just whitespace');
+};
+
 export const createArticleSchema = {
   [Segments.BODY]: Joi.object({
-    title: Joi.string().min(3).max(48).required(),
+    title: Joi.string().trim().min(3).max(48).required(),
     desc: Joi.string().trim().min(10).max(200).required(),
-    article: Joi.string().min(100).max(4000).required(),
+    article: Joi.string()
+      .min(100)
+      .max(4000)
+      .custom(notBlankArticleValidator)
+      .required(),
   }),
 };
 
@@ -30,9 +41,9 @@ export const updateArticleSchema = {
     articleId: Joi.string().custom(objectIdValidator).required(),
   }),
   [Segments.BODY]: Joi.object({
-    title: Joi.string().min(3).max(48),
+    title: Joi.string().trim().min(3).max(48),
     desc: Joi.string().trim().min(10).max(200),
-    article: Joi.string().min(100).max(4000),
+    article: Joi.string().min(100).max(4000).custom(notBlankArticleValidator),
     img: Joi.string().uri(),
   }).min(1),
 };
