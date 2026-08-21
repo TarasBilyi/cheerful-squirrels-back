@@ -7,6 +7,8 @@ import { sendSuccess } from '../utils/response.js';
 
 const usersCurrentlyCreatingArticle = new Set();
 
+const DUPLICATE_ARTICLE_WINDOW_MS = 15_000;
+
 export const createArticle = async (req, res) => {
   if (!req.file) {
     throw createHttpError(400, 'Missing article photo');
@@ -23,6 +25,19 @@ export const createArticle = async (req, res) => {
   usersCurrentlyCreatingArticle.add(ownerId);
 
   try {
+    const recentDuplicate = await Article.findOne({
+      ownerId: req.user._id,
+      title: req.body.title,
+      article: req.body.article,
+      createdAt: { $gte: new Date(Date.now() - DUPLICATE_ARTICLE_WINDOW_MS) },
+    }).sort({ createdAt: -1 });
+
+    if (recentDuplicate) {
+      return sendSuccess(res, 201, 'Article created successfully', {
+        article: recentDuplicate,
+      });
+    }
+
     const uploadResult = await saveFileToCloudinary(req.file.buffer, ownerId, 'article');
 
     const article = await Article.create({
