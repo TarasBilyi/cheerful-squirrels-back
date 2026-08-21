@@ -12,14 +12,27 @@ const notBlankArticleValidator = (value, helpers) => {
     : helpers.message('Article body must contain visible text, not just whitespace');
 };
 
+const articleLengthValidator = (value, helpers) => {
+  const visibleLength = value.replace(/<[^>]*>/g, '').length;
+
+  if (visibleLength < 100) {
+    return helpers.message('"article" length must be at least 100 characters long');
+  }
+
+  if (visibleLength > 4000) {
+    return helpers.message('"article" length must be less than or equal to 4000 characters long');
+  }
+
+  return value;
+};
+
 export const createArticleSchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().trim().min(3).max(48).required(),
     desc: Joi.string().trim().min(10).max(200).required(),
     article: Joi.string()
-      .min(100)
-      .max(4000)
       .custom(notBlankArticleValidator)
+      .custom(articleLengthValidator)
       .required(),
   }),
 };
@@ -43,7 +56,7 @@ export const updateArticleSchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().trim().min(3).max(48),
     desc: Joi.string().trim().min(10).max(200),
-    article: Joi.string().min(100).max(4000).custom(notBlankArticleValidator),
+    article: Joi.string().custom(notBlankArticleValidator).custom(articleLengthValidator),
     img: Joi.string().uri(),
   }).min(1),
 };

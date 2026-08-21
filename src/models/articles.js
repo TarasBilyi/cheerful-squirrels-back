@@ -17,12 +17,19 @@ const articleSchema = new Schema(
     article: {
       type: String,
       required: true,
-      minlength: 100,
-      maxlength: 4000,
-      validate: {
-        validator: value => /\S/.test(value.replace(/<[^>]*>/g, ' ')),
-        message: 'Article body must contain visible text, not just whitespace',
-      },
+      validate: [
+        {
+          validator: value => /\S/.test(value.replace(/<[^>]*>/g, ' ')),
+          message: 'Article body must contain visible text, not just whitespace',
+        },
+        {
+          validator: value => {
+            const length = value.replace(/<[^>]*>/g, '').length;
+            return length >= 100 && length <= 4000;
+          },
+          message: 'Article body must be between 100 and 4000 characters',
+        },
+      ],
     },
     rate: { type: Number, default: 0, min: 0 },
     ownerId: {
